@@ -1,71 +1,26 @@
 #include <stdio.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include "RPGInC.h"
 
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
 const int IMAGE_WIDTH = 16;
 const int IMAGE_HEIGHT = 16;      
 const int MAGNIFICATION = 2;
-const int ROW = 15;
-const int COL = 20;
 const int GRID_SIZE = 32;
-const int NUMBER_OF_MAP_IMAGE = 3;
+const int NUMBER_OF_MAP_IMAGE = 5;
+int ROW = 15;
+int COL = 20;
+
 int animecycle = 24;
 int speed = 2;
 int frame = 0;
 
-typedef enum {DOWN, LEFT, RIGHT, UP} DIRECTION;
-typedef enum {FALSE, TRUE} MOVING;
+CARACTER player = {1, 1, 32, 32, 0, 0, 0, 0, DOWN, FALSE};
+MAPCHIP mapchip[256] = {0};
 
-typedef struct {
-    int map_x;
-    int map_y;
-    int pixel_x;
-    int pixel_y;
-    int offset_x;
-    int offset_y;
-    int velocity_x;
-    int velocity_y;
-    DIRECTION direction;
-    MOVING moving;
-} Caracter;
-
-typedef struct {
-    int mapchip_id;
-    char *mapchip_name;
-    int movable;
-    int transparentColor;
-} Map;
-
-Caracter player = {1, 1, 32, 32, 0, 0, 0, 0, DOWN, FALSE};
-
-int load_image(SDL_Renderer *, SDL_Texture **, char *);
-int character_animation(SDL_Renderer *, SDL_Event);
-int character_move(SDL_Event);
-
-int load_map_image(SDL_Renderer *, SDL_Texture **);
-int load_map(char *);
-int draw_map(SDL_Renderer *, SDL_Texture **);
-int is_movable(int, int);
-int clac_offset(int, int, int *, int *);
-
-int map[10000];
-// int map[300] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-//                 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-//                 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-//                 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-//                 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-//                 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-//                 1, 0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 2, 0, 0, 0, 0, 0, 0, 0, 1,
-//                 1, 0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 1, 2, 0, 0, 0, 0, 0, 0, 1,
-//                 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 2, 0, 0, 0, 0, 0, 0, 1,
-//                 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1,
-//                 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-//                 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-//                 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-//                 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-//                 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+int map_array[1000] = {0};
 
 
 int main (int argc, char *argv[]) {
@@ -87,9 +42,7 @@ int main (int argc, char *argv[]) {
         renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     }
 
-    // Map map[get_map_num("data/mapchip.dat")];
-    SDL_Texture *map_image[NUMBER_OF_MAP_IMAGE];
-    load_map_image(renderer, map_image);
+    mapchip_load(renderer);
     load_map("data/field.map");
 
     // main loop
@@ -99,7 +52,7 @@ int main (int argc, char *argv[]) {
         clac_offset(player.pixel_x, player.pixel_y, &player.offset_x, &player.offset_y);
 
         SDL_RenderClear(renderer);
-        draw_map(renderer, map_image);
+        draw_map(renderer);
         character_animation(renderer, e);
         SDL_RenderPresent(renderer);
 
@@ -120,7 +73,7 @@ int main (int argc, char *argv[]) {
 
     int i;
     for (i = 0;i < NUMBER_OF_MAP_IMAGE;i++) {
-        SDL_DestroyTexture(map_image[i]);
+        SDL_DestroyTexture(mapchip[i].map_image);
     }
 
     SDL_Quit();
@@ -164,8 +117,14 @@ int character_animation(SDL_Renderer *renderer, SDL_Event e) {
             player.map_x = player.pixel_x / GRID_SIZE;
             player.map_y = player.pixel_y / GRID_SIZE;
 
-            if (map[player.map_y*COL+player.map_x] == 3){
-                load_map("data/field2.map");
+            if (map_array[player.map_y*COL+player.map_x] == 3){
+                load_map("data/field3.map");
+		player.pixel_x = 32;
+		player.pixel_y = 32;
+                player.map_x = player.pixel_x / GRID_SIZE;
+                player.map_y = player.pixel_y / GRID_SIZE;
+
+
             }
 
 	    character_move(e);
@@ -231,7 +190,7 @@ int character_move(SDL_Event e) {
 
 }
 
-int draw_map(SDL_Renderer *renderer, SDL_Texture **map_image){
+int draw_map(SDL_Renderer *renderer){
 
     int x, y;
     int start_x = player.offset_x / GRID_SIZE - 1;
@@ -249,9 +208,9 @@ int draw_map(SDL_Renderer *renderer, SDL_Texture **map_image){
 					  IMAGE_WIDTH*MAGNIFICATION, IMAGE_HEIGHT*MAGNIFICATION};
 
             if ((x < 0) || (x > COL - 1) || (y < 0) || (y > ROW - 1)){
-                SDL_RenderCopy(renderer, map_image[1], &imageRect, &drawRect);
+                SDL_RenderCopy(renderer, mapchip[1].map_image, &imageRect, &drawRect);
 	    } else {
-                SDL_RenderCopy(renderer, map_image[map[y*COL+x]], &imageRect, &drawRect);
+                SDL_RenderCopy(renderer, mapchip[map_array[y*COL+x]].map_image, &imageRect, &drawRect);
             }
 
         }
@@ -260,34 +219,63 @@ int draw_map(SDL_Renderer *renderer, SDL_Texture **map_image){
     return 0;
 }
 
-int load_map_image(SDL_Renderer *renderer, SDL_Texture **map_image){
 
-    load_image(renderer, &map_image[0], "image/mapchip/grass.bmp");
-    load_image(renderer, &map_image[1], "image/mapchip/water.bmp");
-    load_image(renderer, &map_image[2], "image/mapchip/mountain.bmp");
+int load_map(char *map_name) {
+    FILE *fp;
+    int map_num;
+
+    fp = fopen(map_name, "r");
+    if (fp == NULL) {
+        printf("file open error. %d\n", __LINE__);
+        return 1;
+    }
+
+    fscanf(fp, "%d%d", &COL, &ROW);
+
+    int i = 0;
+    while((map_num = fgetc(fp)) != EOF){
+        if(map_num != 0x0d){
+            if(map_num != 0x0a){
+                map_array[i] = map_num - 48;
+                i++;
+            }
+       }
+    }
+
+    printf("map:%s\n", map_array);
 
     return 0;
 }
 
-
-int load_map(char *map_name) {
+int mapchip_load(SDL_Renderer *renderer) {
 
     FILE *fp;
-    int map_num;
-
+    int x, y, z;
+    char n[256];
+    char path[256];
     int i = 0;
-    if((fp=fopen(map_name, "r")) != NULL){
-        while((map_num = fgetc(fp)) != EOF){
-            if(map_num != 0x0d){
-                if(map_num != 0x0a){
-                    map[i] = map_num - 48;
-                    i++;
-                }
-	    }
-        }
+
+    fp = fopen("data/mapchip.dat", "r");
+    if (fp == NULL) {
+        printf("file open error. %d\n", __LINE__);
+        return 1;
     }
 
+    for(i = 0;(fscanf(fp, "%d,%[^,],%d,%d", &x, n, &y, &z)) != EOF;i++){
+        mapchip[i].mapchip_id = x;
+        strcpy(mapchip[i].mapchip_name, n);
+        mapchip[i].movable = y;
+        mapchip[i].change_locate = z;
+
+	sprintf(path, "image/mapchip/%s.bmp", mapchip[i].mapchip_name);
+	load_image(renderer, &mapchip[i].map_image, path);
+
+    }
+
+    fclose(fp);
+
     return 0;
+    
 }
 
 int is_movable(int x, int y) {
@@ -296,7 +284,7 @@ int is_movable(int x, int y) {
         return 1;
     }
 
-    if (map[y*COL+x] == 1 || map[y*COL+x] == 2){
+    if(mapchip[map_array[y*COL+x]].movable == 1){
         return 1;
     }
 
@@ -309,3 +297,5 @@ int clac_offset(int x, int y, int *offset_x, int *offset_y) {
 
     return 0;
 }
+
+
