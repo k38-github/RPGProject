@@ -12,6 +12,8 @@ const int GRID_SIZE = 32;
 const int NUMBER_OF_MAP_IMAGE = 5;
 int ROW = 15;
 int COL = 20;
+int OUT_OF_MAP = 0;
+char MAP_EVENT_NAME[256] = "field";
 
 int animecycle = 24;
 int speed = 2;
@@ -20,7 +22,7 @@ int frame = 0;
 CARACTER player = {1, 1, 32, 32, 0, 0, 0, 0, DOWN, FALSE};
 MAPCHIP mapchip[256] = {0};
 
-int map_array[1000] = {0};
+int map_array[65536] = {0};
 
 
 int main (int argc, char *argv[]) {
@@ -117,16 +119,7 @@ int character_animation(SDL_Renderer *renderer, SDL_Event e) {
             player.map_x = player.pixel_x / GRID_SIZE;
             player.map_y = player.pixel_y / GRID_SIZE;
 
-            if (map_array[player.map_y*COL+player.map_x] == 3){
-                load_map("data/field3.map");
-		player.pixel_x = 32;
-		player.pixel_y = 32;
-                player.map_x = player.pixel_x / GRID_SIZE;
-                player.map_y = player.pixel_y / GRID_SIZE;
-
-
-            }
-
+            load_event();
 	    character_move(e);
         }
 
@@ -208,7 +201,7 @@ int draw_map(SDL_Renderer *renderer){
 					  IMAGE_WIDTH*MAGNIFICATION, IMAGE_HEIGHT*MAGNIFICATION};
 
             if ((x < 0) || (x > COL - 1) || (y < 0) || (y > ROW - 1)){
-                SDL_RenderCopy(renderer, mapchip[1].map_image, &imageRect, &drawRect);
+                SDL_RenderCopy(renderer, mapchip[OUT_OF_MAP].map_image, &imageRect, &drawRect);
 	    } else {
                 SDL_RenderCopy(renderer, mapchip[map_array[y*COL+x]].map_image, &imageRect, &drawRect);
             }
@@ -219,6 +212,63 @@ int draw_map(SDL_Renderer *renderer){
     return 0;
 }
 
+int load_event(void) {
+    char event_path[256];
+
+    sprintf(event_path, "data/%s.evt", MAP_EVENT_NAME);
+
+    FILE *fp;
+    char event[256];
+    int event_point_x;
+    int event_point_y;
+    DIRECTION direction_of_penetration;
+    char buf[256];
+    char new_map_name[256];
+    char map_path[256];
+    int new_x;
+    int new_y;
+    int i = 0;
+
+    fp = fopen(event_path, "r");
+    if (fp == NULL) {
+        printf("file open error. %d\n", __LINE__);
+        return 1;
+    }
+
+    for(i = 0;fgets(buf, sizeof(buf), fp) != NULL;i++) {
+        sscanf(buf,
+	       "%[^,],%d,%d,%d,%[^,],%d,%d",
+               event, &event_point_x, &event_point_y, &direction_of_penetration, new_map_name, &new_x, &new_y);
+		
+	// printf("------------------------------\n");
+	// printf("event:%s\n", event);
+	// printf("p_x:%d\n", event_point_x);
+	// printf("p_y:%d\n", event_point_y);
+	// printf("direction:%d\n", direction_of_penetration);
+	// printf("new_map:%s\n", new_map_name);
+	// printf("n_x:%d\n", new_x);
+	// printf("n_y:%d\n", new_y);
+
+	if (strcmp(event,"MOVE") == 0) {
+            if (player.map_x == event_point_x && player.map_y == event_point_y) {
+                sprintf(MAP_EVENT_NAME, "%s", new_map_name);
+
+                sprintf(map_path, "data/%s.map", new_map_name);
+		load_map(map_path);
+
+                player.map_x = new_x;
+                player.map_y = new_y;
+                player.pixel_x = player.map_x * GRID_SIZE;
+                player.pixel_y = player.map_y * GRID_SIZE;
+		player.direction = direction_of_penetration;
+            }	    
+	}
+    }
+
+    fclose(fp);
+
+    return 0;
+}
 
 int load_map(char *map_name) {
     FILE *fp;
@@ -231,6 +281,7 @@ int load_map(char *map_name) {
     }
 
     fscanf(fp, "%d%d", &COL, &ROW);
+    fscanf(fp, "%d", &OUT_OF_MAP);
 
     int i = 0;
     while((map_num = fgetc(fp)) != EOF){
@@ -242,8 +293,7 @@ int load_map(char *map_name) {
        }
     }
 
-    printf("map:%s\n", map_array);
-
+    
     return 0;
 }
 
@@ -253,6 +303,7 @@ int mapchip_load(SDL_Renderer *renderer) {
     int x, y, z;
     char n[256];
     char path[256];
+    char buf[256];
     int i = 0;
 
     fp = fopen("data/mapchip.dat", "r");
@@ -261,7 +312,8 @@ int mapchip_load(SDL_Renderer *renderer) {
         return 1;
     }
 
-    for(i = 0;(fscanf(fp, "%d,%[^,],%d,%d", &x, n, &y, &z)) != EOF;i++){
+    for(i = 0;fgets(buf, sizeof(buf), fp) != NULL;i++){
+        sscanf(buf, "%d,%[^,],%d,%d", &x, n, &y, &z);
         mapchip[i].mapchip_id = x;
         strcpy(mapchip[i].mapchip_name, n);
         mapchip[i].movable = y;

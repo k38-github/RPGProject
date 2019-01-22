@@ -39,6 +39,7 @@ int character_move(SDL_Event);
 
 int load_map_image(SDL_Renderer *, SDL_Texture **);
 int mapchip_load(SDL_Renderer *);
+int load_event(void);
 int load_map(char *);
 int draw_map(SDL_Renderer *);
 int is_movable(int, int);
