@@ -240,28 +240,20 @@ int load_event(void) {
 	       "%[^,],%d,%d,%d,%[^,],%d,%d",
                event, &event_point_x, &event_point_y, &direction_of_penetration, new_map_name, &new_x, &new_y);
 		
-	// printf("------------------------------\n");
-	// printf("event:%s\n", event);
-	// printf("p_x:%d\n", event_point_x);
-	// printf("p_y:%d\n", event_point_y);
-	// printf("direction:%d\n", direction_of_penetration);
-	// printf("new_map:%s\n", new_map_name);
-	// printf("n_x:%d\n", new_x);
-	// printf("n_y:%d\n", new_y);
-
 	if (strcmp(event,"MOVE") == 0) {
             if (player.map_x == event_point_x && player.map_y == event_point_y) {
-                sprintf(MAP_EVENT_NAME, "%s", new_map_name);
+		if (player.direction == direction_of_penetration) {
+                    sprintf(MAP_EVENT_NAME, "%s", new_map_name);
 
-                sprintf(map_path, "data/%s.map", new_map_name);
-		load_map(map_path);
+                    sprintf(map_path, "data/%s.map", new_map_name);
+		    load_map(map_path);
 
-                player.map_x = new_x;
-                player.map_y = new_y;
-                player.pixel_x = player.map_x * GRID_SIZE;
-                player.pixel_y = player.map_y * GRID_SIZE;
-		player.direction = direction_of_penetration;
-            }	    
+                    player.map_x = new_x;
+                    player.map_y = new_y;
+                    player.pixel_x = player.map_x * GRID_SIZE;
+                    player.pixel_y = player.map_y * GRID_SIZE;
+		}
+            }
 	}
     }
 
