@@ -30,19 +30,18 @@ typedef struct {
 } MAPCHIP;
 
 
-int read_file(char *);
-int id_max(void);
-
 int load_image(SDL_Renderer *, SDL_Texture **, char *);
-int character_animation(SDL_Renderer *, SDL_Event);
+int character_animation(SDL_Renderer *);
+int character_update(SDL_Renderer *, SDL_Event);
 int character_move(SDL_Event);
 
 int load_map_image(SDL_Renderer *, SDL_Texture **);
 int mapchip_load(SDL_Renderer *);
-int load_event(void);
+int load_event(SDL_Renderer *);
 int load_map(char *);
 int draw_map(SDL_Renderer *);
 int is_movable(int, int);
 int clac_offset(int, int, int *, int *);
+int fade_out(SDL_Renderer *);
 
 #endif

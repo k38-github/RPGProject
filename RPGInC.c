@@ -55,7 +55,8 @@ int main (int argc, char *argv[]) {
 
         SDL_RenderClear(renderer);
         draw_map(renderer);
-        character_animation(renderer, e);
+        character_animation(renderer);
+	character_update(renderer, e);
         SDL_RenderPresent(renderer);
 
         // event handling
@@ -105,27 +106,11 @@ int load_image(SDL_Renderer *renderer, SDL_Texture **image_texture, char *filena
     return 0;
 }
 
-int character_animation(SDL_Renderer *renderer, SDL_Event e) {
+int character_animation(SDL_Renderer *renderer) {
 
     SDL_Texture *cat_image = NULL;
-    load_image(renderer, &cat_image, "image/charachip/black_cat.bmp");
-
-    if (player.moving == TRUE) {
-        player.pixel_x = player.pixel_x + player.velocity_x;
-        player.pixel_y = player.pixel_y + player.velocity_y;
-
-        if (player.pixel_x % GRID_SIZE == 0 && player.pixel_y % GRID_SIZE == 0){
-            player.moving = FALSE;
-            player.map_x = player.pixel_x / GRID_SIZE;
-            player.map_y = player.pixel_y / GRID_SIZE;
-
-            load_event();
-	    character_move(e);
-        }
-
-    } else {
-	character_move(e);
-    }
+    // load_image(renderer, &cat_image, "image/charachip/black_cat.bmp");
+    load_image(renderer, &cat_image, "image/charachip/white_cat.bmp");
 
     int x = ((frame / animecycle) % 4) * 16;    
     int y = player.direction * IMAGE_HEIGHT;
@@ -145,6 +130,27 @@ int character_animation(SDL_Renderer *renderer, SDL_Event e) {
     SDL_DestroyTexture(cat_image);
 
     return 0;
+}
+
+int character_update(SDL_Renderer *renderer, SDL_Event e) {
+
+    if (player.moving == TRUE) {
+        player.pixel_x = player.pixel_x + player.velocity_x;
+        player.pixel_y = player.pixel_y + player.velocity_y;
+
+        if (player.pixel_x % GRID_SIZE == 0 && player.pixel_y % GRID_SIZE == 0){
+            player.moving = FALSE;
+            player.map_x = player.pixel_x / GRID_SIZE;
+            player.map_y = player.pixel_y / GRID_SIZE;
+
+            load_event(renderer);
+	    character_move(e);
+        }
+
+    } else {
+	character_move(e);
+    }
+
 }
 
 int character_move(SDL_Event e) {
@@ -212,7 +218,7 @@ int draw_map(SDL_Renderer *renderer){
     return 0;
 }
 
-int load_event(void) {
+int load_event(SDL_Renderer *renderer) {
     char event_path[256];
 
     sprintf(event_path, "data/%s.evt", MAP_EVENT_NAME);
@@ -252,6 +258,8 @@ int load_event(void) {
                     player.map_y = new_y;
                     player.pixel_x = player.map_x * GRID_SIZE;
                     player.pixel_y = player.map_y * GRID_SIZE;
+
+		    fade_out(renderer);
 		}
             }
 	}
@@ -260,6 +268,50 @@ int load_event(void) {
     fclose(fp);
 
     return 0;
+}
+
+int fade_out(SDL_Renderer *renderer) {
+
+    SDL_Rect rectangle;
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+
+    rectangle.x = 0;
+    rectangle.y = 0;
+    rectangle.w = SCREEN_WIDTH;
+    rectangle.h = SCREEN_HEIGHT;
+
+    int i = 200;
+    int inverse_flg = 0;
+    while(1) {
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, i); 
+        SDL_RenderFillRect(renderer, &rectangle);
+        SDL_RenderPresent(renderer);
+
+	if (inverse_flg == 0 && i <= 255) {
+	    i = i + 5;
+            SDL_Delay(80);
+	}
+
+	if (i == 255) {
+	   inverse_flg = 1; 
+	}
+
+	if (inverse_flg == 1) {
+            clac_offset(player.pixel_x, player.pixel_y, &player.offset_x, &player.offset_y);
+            draw_map(renderer);
+            character_animation(renderer);
+            SDL_Delay(20);
+
+	    i = i - 5;
+
+	    if (i == 200) {
+		break;
+	    }
+	} 
+    }
+
+    return 0;
+
 }
 
 int load_map(char *map_name) {
