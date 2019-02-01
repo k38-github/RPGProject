@@ -6,10 +6,9 @@
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
 const int IMAGE_WIDTH = 16;
-const int IMAGE_HEIGHT = 16;      
+const int IMAGE_HEIGHT = 16;
 const int MAGNIFICATION = 2;
 const int GRID_SIZE = 32;
-const int NUMBER_OF_MAP_IMAGE = 5;
 int ROW = 15;
 int COL = 20;
 int OUT_OF_MAP = 0;
@@ -18,8 +17,12 @@ char MAP_EVENT_NAME[256] = "field";
 int animecycle = 24;
 int speed = 2;
 int frame = 0;
+int number_of_map_image = 0;
+int number_of_npc_image = 0;
 
 CARACTER player = {1, 1, 32, 32, 0, 0, 0, 0, DOWN, FALSE};
+NPC npc[256] = {0};
+
 MAPCHIP mapchip[256] = {0};
 
 int map_array[65536] = {0};
@@ -39,13 +42,15 @@ int main (int argc, char *argv[]) {
     window = SDL_CreateWindow( "DRAW IMAGE TEST", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN );
     if( window == NULL ) {
         printf( "Window could not be created! SDL_Error: %s\n", SDL_GetError() );
-	return 1;
+        return 1;
     } else {
         renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     }
 
-    mapchip_load(renderer);
+    load_mapchip(renderer);
     load_map("data/field.map");
+
+    load_npc(renderer);
 
     // main loop
     while (1) {
@@ -55,8 +60,10 @@ int main (int argc, char *argv[]) {
 
         SDL_RenderClear(renderer);
         draw_map(renderer);
-        character_animation(renderer);
-	character_update(renderer, e);
+
+        npc_animation(renderer);
+        player_animation(renderer);
+        player_update(renderer, e);
         SDL_RenderPresent(renderer);
 
         // event handling
@@ -65,8 +72,8 @@ int main (int argc, char *argv[]) {
                 break;
             } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE){
                 break;
-	    }
-	}
+        }
+    }
 
     }
 
@@ -75,8 +82,12 @@ int main (int argc, char *argv[]) {
     SDL_DestroyWindow(window);
 
     int i;
-    for (i = 0;i < NUMBER_OF_MAP_IMAGE;i++) {
+    for (i = 0;i < number_of_map_image;i++) {
         SDL_DestroyTexture(mapchip[i].map_image);
+    }
+
+    for (i = 0;i < number_of_npc_image;i++) {
+        SDL_DestroyTexture(npc[i].npc_image);
     }
 
     SDL_Quit();
@@ -93,7 +104,7 @@ int load_image(SDL_Renderer *renderer, SDL_Texture **image_texture, char *filena
     image = IMG_Load(filename);
     if(!image) {
         printf("IMG_Load: %s\n", IMG_GetError());
-	return 1;
+        return 1;
     }
 
     // 透過色の設定
@@ -106,18 +117,18 @@ int load_image(SDL_Renderer *renderer, SDL_Texture **image_texture, char *filena
     return 0;
 }
 
-int character_animation(SDL_Renderer *renderer) {
+int player_animation(SDL_Renderer *renderer) {
 
     SDL_Texture *cat_image = NULL;
-    // load_image(renderer, &cat_image, "image/charachip/black_cat.bmp");
-    load_image(renderer, &cat_image, "image/charachip/white_cat.bmp");
+    load_image(renderer, &cat_image, "image/charachip/black_cat.bmp");
+    // load_image(renderer, &cat_image, "image/charachip/white_cat.bmp");
 
-    int x = ((frame / animecycle) % 4) * 16;    
+    int x = ((frame / animecycle) % 4) * 16;
     int y = player.direction * IMAGE_HEIGHT;
 
-    SDL_Rect imageRect=(SDL_Rect){x, y, IMAGE_WIDTH, IMAGE_HEIGHT};      
+    SDL_Rect imageRect=(SDL_Rect){x, y, IMAGE_WIDTH, IMAGE_HEIGHT};
     SDL_Rect drawRect=(SDL_Rect){player.pixel_x - player.offset_x, player.pixel_y - player.offset_y,
-	                         IMAGE_WIDTH*MAGNIFICATION, IMAGE_HEIGHT*MAGNIFICATION};
+                                 IMAGE_WIDTH*MAGNIFICATION, IMAGE_HEIGHT*MAGNIFICATION};
 
     SDL_RenderCopy(renderer, cat_image, &imageRect, &drawRect);
 
@@ -132,7 +143,7 @@ int character_animation(SDL_Renderer *renderer) {
     return 0;
 }
 
-int character_update(SDL_Renderer *renderer, SDL_Event e) {
+int player_update(SDL_Renderer *renderer, SDL_Event e) {
 
     if (player.moving == TRUE) {
         player.pixel_x = player.pixel_x + player.velocity_x;
@@ -143,17 +154,17 @@ int character_update(SDL_Renderer *renderer, SDL_Event e) {
             player.map_x = player.pixel_x / GRID_SIZE;
             player.map_y = player.pixel_y / GRID_SIZE;
 
-            load_event(renderer);
-	    character_move(e);
+            load_move(renderer);
+            player_move(e);
         }
 
     } else {
-	character_move(e);
+        player_move(e);
     }
 
 }
 
-int character_move(SDL_Event e) {
+int player_move(SDL_Event e) {
 
     if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_UP){
         player.direction = UP;
@@ -184,9 +195,88 @@ int character_move(SDL_Event e) {
             player.moving = TRUE;
         }
     }
-    
+
     return 0;
 
+}
+
+int load_npc(SDL_Renderer *renderer) {
+    char event_path[256];
+
+    sprintf(event_path, "data/%s.evt", MAP_EVENT_NAME);
+
+    FILE *fp;
+    char event[256];
+    char npc_name[256];
+    int map_x;
+    int map_y;
+    DIRECTION direction;
+    MOVING moving;
+    char message[1024];
+
+    char buf[256];
+    char npc_path[256];
+    int i = 0;
+    int element_number = 0;
+
+    fp = fopen(event_path, "r");
+    if (fp == NULL) {
+        printf("file open error. %d\n", __LINE__);
+        return 1;
+    }
+
+    for (i = 0;i < number_of_npc_image;i++) {
+        SDL_DestroyTexture(npc[i].npc_image);
+    }
+
+    for(i = 0;fgets(buf, sizeof(buf), fp) != NULL;i++) {
+
+        if (strncmp(buf, "#", 1) != 0){
+            if (strncmp(buf, "CHARA", 5) == 0) {
+                sscanf(buf,
+                   "%[^,],%[^,],%d,%d,%d,%d,%[^,]",
+                       event, npc_name, &map_x, &map_y, &direction, &moving, message);
+
+                sprintf(npc_path, "image/charachip/%s.bmp", npc_name);
+                load_image(renderer, &npc[element_number].npc_image, npc_path);
+
+                npc[element_number].npc.map_x = map_x;
+                npc[element_number].npc.map_y = map_y;
+                npc[element_number].npc.direction = direction;
+                npc[element_number].npc.moving = moving;
+
+                sprintf(npc[element_number].message, "%s", message);
+
+                element_number += 1;
+            }
+        }
+    }
+
+    number_of_npc_image = element_number;
+
+    fclose(fp);
+
+    return 0;
+}
+
+int npc_animation(SDL_Renderer *renderer) {
+
+    int i;
+    for(i = 0; number_of_npc_image >= i;i++) {
+
+        int x = ((frame / animecycle) % 4) * 16;
+        int y = npc[i].npc.direction * IMAGE_HEIGHT;
+
+        SDL_Rect imageRect=(SDL_Rect){x/4, y/4, IMAGE_WIDTH/4, IMAGE_HEIGHT/4};
+        SDL_Rect drawRect=(SDL_Rect){(npc[i].npc.map_x * GRID_SIZE) - player.offset_x,
+                                     (npc[i].npc.map_y * GRID_SIZE) - player.offset_y,
+                                     IMAGE_WIDTH*MAGNIFICATION, IMAGE_HEIGHT*MAGNIFICATION};
+
+        SDL_RenderCopy(renderer, npc[i].npc_image, &imageRect, &drawRect);
+    }
+
+
+    return 0;
 }
 
 int draw_map(SDL_Renderer *renderer){
@@ -201,14 +291,14 @@ int draw_map(SDL_Renderer *renderer){
     for(y = start_y;y < end_y;y++){
         for(x = start_x; x < end_x;x++){
 
-            SDL_Rect imageRect=(SDL_Rect){0, 0, IMAGE_WIDTH, IMAGE_HEIGHT};      
+            SDL_Rect imageRect=(SDL_Rect){0, 0, IMAGE_WIDTH, IMAGE_HEIGHT};
             SDL_Rect drawRect=(SDL_Rect){(x * GRID_SIZE) - player.offset_x,
-		                         (y * GRID_SIZE) - player.offset_y,
-					  IMAGE_WIDTH*MAGNIFICATION, IMAGE_HEIGHT*MAGNIFICATION};
+                                         (y * GRID_SIZE) - player.offset_y,
+                                         IMAGE_WIDTH*MAGNIFICATION, IMAGE_HEIGHT*MAGNIFICATION};
 
             if ((x < 0) || (x > COL - 1) || (y < 0) || (y > ROW - 1)){
                 SDL_RenderCopy(renderer, mapchip[OUT_OF_MAP].map_image, &imageRect, &drawRect);
-	    } else {
+            } else {
                 SDL_RenderCopy(renderer, mapchip[map_array[y*COL+x]].map_image, &imageRect, &drawRect);
             }
 
@@ -218,7 +308,7 @@ int draw_map(SDL_Renderer *renderer){
     return 0;
 }
 
-int load_event(SDL_Renderer *renderer) {
+int load_move(SDL_Renderer *renderer) {
     char event_path[256];
 
     sprintf(event_path, "data/%s.evt", MAP_EVENT_NAME);
@@ -242,27 +332,32 @@ int load_event(SDL_Renderer *renderer) {
     }
 
     for(i = 0;fgets(buf, sizeof(buf), fp) != NULL;i++) {
-        sscanf(buf,
-	       "%[^,],%d,%d,%d,%[^,],%d,%d",
-               event, &event_point_x, &event_point_y, &direction_of_penetration, new_map_name, &new_x, &new_y);
-		
-	if (strcmp(event,"MOVE") == 0) {
-            if (player.map_x == event_point_x && player.map_y == event_point_y) {
-		if (player.direction == direction_of_penetration) {
-                    sprintf(MAP_EVENT_NAME, "%s", new_map_name);
 
-                    sprintf(map_path, "data/%s.map", new_map_name);
-		    load_map(map_path);
+        if (strncmp(buf, "#", 1) != 0){
+            if (strncmp(buf, "MOVE", 4) == 0) {
+                sscanf(buf,
+                   "%[^,],%d,%d,%d,%[^,],%d,%d",
+                       event, &event_point_x, &event_point_y, &direction_of_penetration, new_map_name, &new_x, &new_y);
 
-                    player.map_x = new_x;
-                    player.map_y = new_y;
-                    player.pixel_x = player.map_x * GRID_SIZE;
-                    player.pixel_y = player.map_y * GRID_SIZE;
+                if (player.map_x == event_point_x && player.map_y == event_point_y) {
+                    if (player.direction == direction_of_penetration) {
+                        sprintf(MAP_EVENT_NAME, "%s", new_map_name);
 
-		    fade_out(renderer);
-		}
+                        sprintf(map_path, "data/%s.map", new_map_name);
+                        load_map(map_path);
+
+                        player.map_x = new_x;
+                        player.map_y = new_y;
+                        player.pixel_x = player.map_x * GRID_SIZE;
+                        player.pixel_y = player.map_y * GRID_SIZE;
+
+                        load_npc(renderer);
+
+                        fade_out(renderer);
+                    }
+                }
             }
-	}
+        }
     }
 
     fclose(fp);
@@ -283,31 +378,31 @@ int fade_out(SDL_Renderer *renderer) {
     int i = 200;
     int inverse_flg = 0;
     while(1) {
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, i); 
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, i);
         SDL_RenderFillRect(renderer, &rectangle);
         SDL_RenderPresent(renderer);
 
-	if (inverse_flg == 0 && i <= 255) {
-	    i = i + 5;
+        if (inverse_flg == 0 && i <= 255) {
+            i = i + 5;
             SDL_Delay(80);
-	}
+        }
 
-	if (i == 255) {
-	   inverse_flg = 1; 
-	}
+        if (i == 255) {
+           inverse_flg = 1;
+        }
 
-	if (inverse_flg == 1) {
+        if (inverse_flg == 1) {
             clac_offset(player.pixel_x, player.pixel_y, &player.offset_x, &player.offset_y);
             draw_map(renderer);
-            character_animation(renderer);
+            player_animation(renderer);
             SDL_Delay(20);
 
-	    i = i - 5;
+            i = i - 5;
 
-	    if (i == 200) {
-		break;
-	    }
-	} 
+            if (i == 200) {
+                break;
+            }
+        }
     }
 
     return 0;
@@ -337,11 +432,11 @@ int load_map(char *map_name) {
        }
     }
 
-    
+
     return 0;
 }
 
-int mapchip_load(SDL_Renderer *renderer) {
+int load_mapchip(SDL_Renderer *renderer) {
 
     FILE *fp;
     int x, y, z;
@@ -363,18 +458,27 @@ int mapchip_load(SDL_Renderer *renderer) {
         mapchip[i].movable = y;
         mapchip[i].change_locate = z;
 
-	sprintf(path, "image/mapchip/%s.bmp", mapchip[i].mapchip_name);
-	load_image(renderer, &mapchip[i].map_image, path);
+        sprintf(path, "image/mapchip/%s.bmp", mapchip[i].mapchip_name);
+        load_image(renderer, &mapchip[i].map_image, path);
 
     }
+
+    number_of_map_image = i - 1;
 
     fclose(fp);
 
     return 0;
-    
+
 }
 
 int is_movable(int x, int y) {
+
+    int i;
+    for(i = 0;i < number_of_npc_image;i++) {
+        if (npc[i].npc.map_x == x && npc[i].npc.map_y == y) {
+            return 1;
+        }
+    }
 
     if ( x < 0 || x > COL - 1 || y  < 0 || y > ROW - 1) {
         return 1;
@@ -383,6 +487,7 @@ int is_movable(int x, int y) {
     if(mapchip[map_array[y*COL+x]].movable == 1){
         return 1;
     }
+
 
     return 0;
 }
