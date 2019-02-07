@@ -25,6 +25,7 @@ typedef struct {
     CARACTER npc;
     char message[1024];
     SDL_Texture *npc_image;
+    MOVING npc_move;
 } NPC;
 
 typedef struct {
@@ -44,6 +45,8 @@ int player_move(SDL_Event);
 
 int load_npc(SDL_Renderer *);
 int npc_animation(SDL_Renderer *);
+int npc_update(SDL_Renderer *renderer, int);
+int npc_move(DIRECTION, int);
 
 int load_map_image(SDL_Renderer *, SDL_Texture **);
 int load_mapchip(SDL_Renderer *);

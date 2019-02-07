@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include "RPGInC.h"
@@ -62,6 +64,7 @@ int main (int argc, char *argv[]) {
         draw_map(renderer);
 
         npc_animation(renderer);
+
         player_animation(renderer);
         player_update(renderer, e);
         SDL_RenderPresent(renderer);
@@ -72,8 +75,8 @@ int main (int argc, char *argv[]) {
                 break;
             } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE){
                 break;
+            }
         }
-    }
 
     }
 
@@ -212,6 +215,7 @@ int load_npc(SDL_Renderer *renderer) {
     int map_y;
     DIRECTION direction;
     MOVING moving;
+    int max_step;
     char message[1024];
 
     char buf[256];
@@ -226,7 +230,14 @@ int load_npc(SDL_Renderer *renderer) {
     }
 
     for (i = 0;i < number_of_npc_image;i++) {
+        npc[i].npc.map_x = 0;
+        npc[i].npc.map_y = 0;
+        npc[i].npc.pixel_x = 0;
+        npc[i].npc.pixel_y = 0;
+        npc[i].npc.direction = 0;
+        npc[i].npc.moving = 0;
         SDL_DestroyTexture(npc[i].npc_image);
+        sprintf(npc[i].message, "%s", '\0');
     }
 
     for(i = 0;fgets(buf, sizeof(buf), fp) != NULL;i++) {
@@ -242,8 +253,10 @@ int load_npc(SDL_Renderer *renderer) {
 
                 npc[element_number].npc.map_x = map_x;
                 npc[element_number].npc.map_y = map_y;
+                npc[element_number].npc.pixel_x = map_x * GRID_SIZE;
+                npc[element_number].npc.pixel_y = map_y * GRID_SIZE;
                 npc[element_number].npc.direction = direction;
-                npc[element_number].npc.moving = moving;
+                npc[element_number].npc_move = moving;
 
                 sprintf(npc[element_number].message, "%s", message);
 
@@ -268,15 +281,80 @@ int npc_animation(SDL_Renderer *renderer) {
         int y = npc[i].npc.direction * IMAGE_HEIGHT;
 
         SDL_Rect imageRect=(SDL_Rect){x/4, y/4, IMAGE_WIDTH/4, IMAGE_HEIGHT/4};
-        SDL_Rect drawRect=(SDL_Rect){(npc[i].npc.map_x * GRID_SIZE) - player.offset_x,
-                                     (npc[i].npc.map_y * GRID_SIZE) - player.offset_y,
+        SDL_Rect drawRect=(SDL_Rect){npc[i].npc.pixel_x - player.offset_x,
+                                     npc[i].npc.pixel_y - player.offset_y,
                                      IMAGE_WIDTH*MAGNIFICATION, IMAGE_HEIGHT*MAGNIFICATION};
 
         SDL_RenderCopy(renderer, npc[i].npc_image, &imageRect, &drawRect);
+
+        if (npc[i].npc_move == TRUE && number_of_npc_image != 0) {
+            npc_update(renderer, i);
+        }
     }
 
-
     return 0;
+}
+
+int npc_update(SDL_Renderer *renderer, int element) {
+
+    srand((unsigned)time(NULL));
+    int target = rand()%number_of_npc_image;
+    int action = rand()%10;
+
+    if (npc[element].npc_move == TRUE) {
+        if (npc[element].npc.moving == TRUE) {
+            npc[element].npc.pixel_x = npc[element].npc.pixel_x + npc[element].npc.velocity_x;
+            npc[element].npc.pixel_y = npc[element].npc.pixel_y + npc[element].npc.velocity_y;
+
+            if (npc[element].npc.pixel_x % GRID_SIZE == 0 && npc[element].npc.pixel_y % GRID_SIZE == 0) {
+                npc[element].npc.moving = FALSE;
+                npc[element].npc.map_x = npc[element].npc.pixel_x / GRID_SIZE;
+                npc[element].npc.map_y = npc[element].npc.pixel_y / GRID_SIZE;
+            }
+
+        } else {
+            if (target == element && action < 3) {
+                npc_move(rand()%4, element);
+            }
+        }
+    }
+}
+
+int npc_move(DIRECTION direction, int element) {
+
+    if (frame == 0) {
+        if (direction == UP){
+            npc[element].npc.direction = UP;
+            if (is_movable(npc[element].npc.map_x, npc[element].npc.map_y - 1) == 0) {
+                npc[element].npc.velocity_x = 0;
+                npc[element].npc.velocity_y = -speed;
+                npc[element].npc.moving = TRUE;
+            }
+        } else if (direction == DOWN){
+            npc[element].npc.direction = DOWN;
+            if (is_movable(npc[element].npc.map_x, npc[element].npc.map_y + 1) == 0) {
+                npc[element].npc.velocity_x = 0;
+                npc[element].npc.velocity_y = speed;
+                npc[element].npc.moving = TRUE;
+            }
+        } else if (direction == RIGHT){
+            npc[element].npc.direction = RIGHT;
+            if (is_movable(npc[element].npc.map_x + 1, npc[element].npc.map_y) == 0) {
+                npc[element].npc.velocity_x = speed;
+                npc[element].npc.velocity_y = 0;
+                npc[element].npc.moving = TRUE;
+            }
+        } else if (direction == LEFT){
+            npc[element].npc.direction = LEFT;
+            if (is_movable(npc[element].npc.map_x - 1, npc[element].npc.map_y) == 0) {
+                npc[element].npc.velocity_x = -speed;
+                npc[element].npc.velocity_y = 0;
+                npc[element].npc.moving = TRUE;
+            }
+        }
+    }
+    return 0;
+
 }
 
 int draw_map(SDL_Renderer *renderer){
@@ -484,10 +562,13 @@ int is_movable(int x, int y) {
         return 1;
     }
 
-    if(mapchip[map_array[y*COL+x]].movable == 1){
+    if (mapchip[map_array[y*COL+x]].movable == 1) {
         return 1;
     }
 
+    if(player.map_x == x && player.map_y == y) {
+        return 1;
+    }
 
     return 0;
 }
