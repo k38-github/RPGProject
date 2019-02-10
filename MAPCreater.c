@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
+
+#define FONT_PATH "font/PixelMplus12-Bold.ttf"
 
 const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
@@ -16,6 +19,7 @@ int COL = 20;
 int OUT_OF_MAP = 10;
 int frame = 0;
 
+int draw_coordinate(SDL_Renderer *, TTF_Font *);
 int clac_offset(int, int, int *, int *);
 int load_mapchip(SDL_Renderer *);
 int draw_map(SDL_Renderer *);
@@ -25,7 +29,9 @@ int load_image(SDL_Renderer *, SDL_Texture **, char *);
 int place_mapchip(SDL_Point, SDL_Renderer *);
 int place_mapchip_with_key(SDL_Renderer *);
 int get_mapchip(SDL_Point, SDL_Renderer *);
+int get_mapchip_right_click(SDL_Point, SDL_Renderer *);
 int get_mapchip_with_key(SDL_Renderer *);
+int get_mapchip_with_key_a(SDL_Renderer *);
 int initialize(SDL_Renderer *);
 
 typedef struct {
@@ -60,6 +66,7 @@ int main (int argc, char *argv[]) {
 
     SDL_Window *window = NULL;
     SDL_Renderer *renderer = NULL;
+    TTF_Font *font = NULL;
 
     // ウィンドウの位置
     SDL_Point window_position = {
@@ -87,6 +94,16 @@ int main (int argc, char *argv[]) {
         renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     }
 
+    //Initialize TTF
+    if ( TTF_Init() < 0 ) {
+        printf("TTFcould not initialize! TTF_Error: %s\n", TTF_GetError());
+    }
+
+    font = TTF_OpenFont(FONT_PATH, 22);
+    if ( font == NULL ) {
+        printf("TTF_OpenFont: %s\n", TTF_GetError());
+    }
+
     initialize(renderer);
 
     int pallet_display = 1;
@@ -107,6 +124,11 @@ int main (int argc, char *argv[]) {
             draw_map(renderer);
             cursor_move(e, renderer);
         }
+
+        draw_selected_mapchip(renderer);
+
+        draw_coordinate(renderer, font);
+
         SDL_RenderPresent(renderer);
 
         // event handling
@@ -121,17 +143,18 @@ int main (int argc, char *argv[]) {
                 } else {
                     pallet_display = 0;
                 }
-            } else if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON_LEFT &&
-                         pallet_display == 0) {
-                get_mapchip(mouse_position, renderer);
+            } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_a && pallet_display == 1) {
+                get_mapchip_with_key_a(renderer);
             } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SPACE && pallet_display == 0) {
                 get_mapchip_with_key(renderer);
-            } else if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON_LEFT &&
-                         pallet_display == 1) {
-                place_mapchip(mouse_position, renderer);
             } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SPACE && pallet_display == 1) {
                 place_mapchip_with_key(renderer);
-            } else if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON_RIGHT){
+            } else if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON_LEFT && pallet_display == 0) {
+                get_mapchip(mouse_position, renderer);
+            } else if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON_LEFT && pallet_display == 1) {
+                place_mapchip(mouse_position, renderer);
+            } else if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON_RIGHT && pallet_display == 1) {
+                get_mapchip_right_click(mouse_position, renderer);
             }
         }
 
@@ -213,8 +236,19 @@ int get_mapchip(SDL_Point mouse_position, SDL_Renderer *renderer) {
 
     SDL_GetMouseState(&mouse_position.x, &mouse_position.y);
     select_mapchip =
-       pallet_array[((pallet_cursor.offset_y + mouse_position.y) / GRID_SIZE)*PALLET_COL +
+       pallet_array[((pallet_cursor.offset_y + mouse_position.y) / GRID_SIZE) * PALLET_COL +
                     ((pallet_cursor.offset_x + mouse_position.x) / GRID_SIZE)];
+
+    return 0;
+
+}
+
+int get_mapchip_right_click(SDL_Point mouse_position, SDL_Renderer *renderer) {
+
+    SDL_GetMouseState(&mouse_position.x, &mouse_position.y);
+    select_mapchip =
+       map_array[((cursor.offset_y + mouse_position.y) / GRID_SIZE) * COL +
+                    ((cursor.offset_x + mouse_position.x) / GRID_SIZE)];
 
     return 0;
 
@@ -228,6 +262,47 @@ int get_mapchip_with_key(SDL_Renderer *renderer) {
 
     return 0;
 
+}
+
+int get_mapchip_with_key_a(SDL_Renderer *renderer) {
+
+    select_mapchip =
+       map_array[(cursor.map_y / GRID_SIZE) * COL +
+                    (cursor.map_x / GRID_SIZE)];
+
+    return 0;
+
+}
+
+int draw_selected_mapchip(SDL_Renderer *renderer) {
+    SDL_Rect rectangle;
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+
+    rectangle.x = 700;
+    rectangle.y = 30;
+    rectangle.w = 62;
+    rectangle.h = 62;
+
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    SDL_RenderFillRect(renderer, &rectangle);
+
+    rectangle.x = 702;
+    rectangle.y = 32;
+    rectangle.w = 58;
+    rectangle.h = 58;
+
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderFillRect(renderer, &rectangle);
+
+    SDL_Rect imageRect=(SDL_Rect){0, 0, IMAGE_WIDTH, IMAGE_HEIGHT};
+    SDL_Rect drawRect=(SDL_Rect){715,
+                                 45,
+                                 IMAGE_WIDTH*MAGNIFICATION, IMAGE_HEIGHT*MAGNIFICATION};
+
+    SDL_RenderCopy(renderer, mapchip[select_mapchip].map_image, &imageRect, &drawRect);
+
+
+    return 0;
 }
 
 int cursor_move(SDL_Event e, SDL_Renderer *renderer) {
@@ -427,6 +502,36 @@ int clac_offset(int x, int y, int *offset_x, int *offset_y) {
     *offset_y = y - (SCREEN_HEIGHT / 2);
 
     return 0;
+}
+
+
+int draw_coordinate(SDL_Renderer *renderer, TTF_Font *font) {
+    SDL_Surface *surface;
+    SDL_Texture *texture;
+
+    char path[256];
+
+    sprintf(path, "%03d %03d", cursor.map_x / GRID_SIZE, cursor.map_y / GRID_SIZE);
+    surface = TTF_RenderUTF8_Blended(font, path, (SDL_Color){255,255,255,255});
+
+    //surfaceからTextureを作る
+    texture =SDL_CreateTextureFromSurface(renderer, surface);
+
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+
+    //文字を描写したTextureのサイズを取得する
+    int iw,ih;
+    SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
+
+    SDL_Rect txtRect=(SDL_Rect){0,0,iw,ih};
+    SDL_Rect pasteRect=(SDL_Rect){695,100,iw,ih};
+
+    SDL_RenderCopy(renderer, texture, &txtRect, &pasteRect);
+
+    SDL_FreeSurface(surface);
+
+    return 0;
+
 }
 
 
