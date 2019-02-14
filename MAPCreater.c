@@ -13,26 +13,16 @@ const int MAGNIFICATION = 2;
 const int GRID_SIZE = 32;
 const int PALLET_ROW = 15;
 const int PALLET_COL = 20;
+const int FONT_SIZE = 22;
 
 int ROW = 15;
 int COL = 20;
 int OUT_OF_MAP = 10;
 int frame = 0;
 
-int draw_coordinate(SDL_Renderer *, TTF_Font *);
-int clac_offset(int, int, int *, int *);
-int load_mapchip(SDL_Renderer *);
-int draw_map(SDL_Renderer *);
-int draw_pallet(SDL_Renderer *);
-int cursor_move(SDL_Event, SDL_Renderer *);
-int load_image(SDL_Renderer *, SDL_Texture **, char *);
-int place_mapchip(SDL_Point, SDL_Renderer *);
-int place_mapchip_with_key(SDL_Renderer *);
-int get_mapchip(SDL_Point, SDL_Renderer *);
-int get_mapchip_right_click(SDL_Point, SDL_Renderer *);
-int get_mapchip_with_key(SDL_Renderer *);
-int get_mapchip_with_key_a(SDL_Renderer *);
-int initialize(SDL_Renderer *);
+typedef enum {WHITE, BLACK} COLOR;
+typedef enum {CTRL_OFF, CTRL_ON} CTRL;
+typedef enum {PALLET_DISPLAY_OFF, PALLET_DISPLAY_ON} PALLET_DISPLAY;
 
 typedef struct {
     int map_x;
@@ -49,15 +39,40 @@ typedef struct {
     SDL_Texture *map_image;
 } MAPCHIP;
 
-CURSOR cursor = {1, 1, 0, 0};
-CURSOR pallet_cursor = {1, 1, 0, 0};
-MAPCHIP mapchip[256] = {0};
+int accept_character_input(SDL_Event, SDL_Renderer *, TTF_Font *, char *, int, int);
+int display_save_window(SDL_Event, SDL_Renderer *, TTF_Font *);
+int display_character_string(SDL_Renderer *, TTF_Font *, char *, int, int);
+int make_box(SDL_Renderer *, int, int, int, int, int, COLOR);
+int load_file(char *);
+int save_file(char *);
+int display_save_window(SDL_Event, SDL_Renderer *, TTF_Font *);
+int draw_coordinate(SDL_Renderer *, TTF_Font *);
+int clac_offset(int, int, int *, int *);
+int load_mapchip(SDL_Renderer *);
+int draw_map(SDL_Renderer *);
+int draw_pallet(SDL_Renderer *);
+int cursor_move(SDL_Event, SDL_Renderer *);
+int load_image(SDL_Renderer *, SDL_Texture **, char *);
+int place_mapchip(SDL_Point, SDL_Renderer *);
+int place_mapchip_with_key(SDL_Renderer *);
+int get_mapchip(SDL_Point, SDL_Renderer *);
+int get_mapchip_right_click(SDL_Point, SDL_Renderer *);
+int get_mapchip_with_key(SDL_Renderer *);
+int get_mapchip_with_key_a(SDL_Renderer *);
+int initialize(SDL_Renderer *);
+
 
 int *map_array;
 int *pallet_array;
 int number_of_map_image = 0;
 int select_mapchip = 0;
 
+CURSOR cursor = {1, 1, 0, 0};
+CURSOR pallet_cursor = {1, 1, 0, 0};
+MAPCHIP mapchip[256] = {0};
+
+CTRL ctrl = CTRL_OFF;
+PALLET_DISPLAY pallet_display = PALLET_DISPLAY_OFF;
 
 int main (int argc, char *argv[]) {
 
@@ -99,17 +114,17 @@ int main (int argc, char *argv[]) {
         printf("TTFcould not initialize! TTF_Error: %s\n", TTF_GetError());
     }
 
-    font = TTF_OpenFont(FONT_PATH, 22);
+    font = TTF_OpenFont(FONT_PATH, FONT_SIZE);
     if ( font == NULL ) {
         printf("TTF_OpenFont: %s\n", TTF_GetError());
     }
 
     initialize(renderer);
 
-    int pallet_display = 1;
-
     // main loop
     while (1) {
+
+        SDL_Delay(10);
 
         SDL_Event e;
 
@@ -117,7 +132,7 @@ int main (int argc, char *argv[]) {
         clac_offset(pallet_cursor.map_x, pallet_cursor.map_y, &pallet_cursor.offset_x, &pallet_cursor.offset_y);
 
         SDL_RenderClear(renderer);
-        if (pallet_display == 0) {
+        if (pallet_display == PALLET_DISPLAY_ON) {
             draw_pallet(renderer);
             pallet_move(e, renderer);
         } else {
@@ -129,6 +144,7 @@ int main (int argc, char *argv[]) {
 
         draw_coordinate(renderer, font);
 
+
         SDL_RenderPresent(renderer);
 
         // event handling
@@ -137,23 +153,46 @@ int main (int argc, char *argv[]) {
                 break;
             } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE) {
                 break;
-            } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_i) {
-                if (pallet_display == 0) {
-                    pallet_display = 1;
-                } else {
-                    pallet_display = 0;
+            } else if (e.type == SDL_KEYDOWN &&
+                      (e.key.keysym.sym == SDLK_RCTRL || e.key.keysym.sym == SDLK_LCTRL)) {
+                ctrl = CTRL_ON;
+            } else if (e.type == SDL_KEYUP &&
+                      (e.key.keysym.sym == SDLK_RCTRL || e.key.keysym.sym == SDLK_LCTRL)) {
+                ctrl = CTRL_OFF;
+            } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_s) {
+                // save_file();
+                if (ctrl == CTRL_ON) {
+                    ctrl = CTRL_OFF;
+                    display_save_window(e, renderer, font);
                 }
-            } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_a && pallet_display == 1) {
+            } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_l) {
+                if (ctrl == CTRL_ON) {
+                    ctrl = CTRL_OFF;
+                    display_load_window(e, renderer, font);
+                }
+            } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_i) {
+                if (pallet_display == PALLET_DISPLAY_OFF) {
+                    pallet_display = PALLET_DISPLAY_ON;
+                } else {
+                    pallet_display = PALLET_DISPLAY_OFF;
+                }
+            } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_a &&
+                       pallet_display == PALLET_DISPLAY_OFF) {
                 get_mapchip_with_key_a(renderer);
-            } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SPACE && pallet_display == 0) {
+            } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SPACE &&
+                       pallet_display == PALLET_DISPLAY_ON) {
                 get_mapchip_with_key(renderer);
-            } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SPACE && pallet_display == 1) {
+            } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SPACE &&
+                       pallet_display == PALLET_DISPLAY_OFF) {
                 place_mapchip_with_key(renderer);
-            } else if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON_LEFT && pallet_display == 0) {
+            } else if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON_LEFT &&
+                       pallet_display == PALLET_DISPLAY_ON) {
                 get_mapchip(mouse_position, renderer);
-            } else if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON_LEFT && pallet_display == 1) {
+            } else if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON_LEFT &&
+                       pallet_display == PALLET_DISPLAY_OFF) {
                 place_mapchip(mouse_position, renderer);
-            } else if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON_RIGHT && pallet_display == 1) {
+            } else if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON_RIGHT &&
+                       pallet_display == PALLET_DISPLAY_OFF) {
                 get_mapchip_right_click(mouse_position, renderer);
             }
         }
@@ -275,24 +314,8 @@ int get_mapchip_with_key_a(SDL_Renderer *renderer) {
 }
 
 int draw_selected_mapchip(SDL_Renderer *renderer) {
-    SDL_Rect rectangle;
-    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-
-    rectangle.x = 700;
-    rectangle.y = 30;
-    rectangle.w = 62;
-    rectangle.h = 62;
-
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    SDL_RenderFillRect(renderer, &rectangle);
-
-    rectangle.x = 702;
-    rectangle.y = 32;
-    rectangle.w = 58;
-    rectangle.h = 58;
-
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-    SDL_RenderFillRect(renderer, &rectangle);
+    make_box(renderer, 700, 30, 62, 62, 255, WHITE);
+    make_box(renderer, 702, 32, 58, 58, 255, BLACK);
 
     SDL_Rect imageRect=(SDL_Rect){0, 0, IMAGE_WIDTH, IMAGE_HEIGHT};
     SDL_Rect drawRect=(SDL_Rect){715,
@@ -307,18 +330,12 @@ int draw_selected_mapchip(SDL_Renderer *renderer) {
 
 int cursor_move(SDL_Event e, SDL_Renderer *renderer) {
 
-    SDL_Rect rectangle;
-    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+    int cursor_x = cursor.map_x - cursor.offset_x;
+    int cursor_y = cursor.map_y - cursor.offset_y;
 
-    rectangle.x = cursor.map_x - cursor.offset_x;
-    rectangle.y = cursor.map_y - cursor.offset_y;
-    rectangle.w = GRID_SIZE;
-    rectangle.h = GRID_SIZE;
+    make_box(renderer, cursor_x, cursor_y, GRID_SIZE, GRID_SIZE, 100, BLACK);
 
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 100);
-    SDL_RenderFillRect(renderer, &rectangle);
-
-    if (frame % 12 == 0) {
+    if (frame % 5 == 0) {
 
         if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_UP){
             cursor.map_y = cursor.map_y - GRID_SIZE;
@@ -332,7 +349,7 @@ int cursor_move(SDL_Event e, SDL_Renderer *renderer) {
 
      }
 
-    if (frame <= 12000) {
+    if (frame <= 10000) {
         frame++;
     } else {
         frame = 0;
@@ -354,18 +371,12 @@ int cursor_move(SDL_Event e, SDL_Renderer *renderer) {
 
 int pallet_move(SDL_Event e, SDL_Renderer *renderer) {
 
-    SDL_Rect rectangle;
-    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+    int cursor_x = pallet_cursor.map_x - pallet_cursor.offset_x;
+    int cursor_y = pallet_cursor.map_y - pallet_cursor.offset_y;
 
-    rectangle.x = pallet_cursor.map_x - pallet_cursor.offset_x;
-    rectangle.y = pallet_cursor.map_y - pallet_cursor.offset_y;
-    rectangle.w = GRID_SIZE;
-    rectangle.h = GRID_SIZE;
+    make_box(renderer, cursor_x, cursor_y, GRID_SIZE, GRID_SIZE, 100, BLACK);
 
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 100);
-    SDL_RenderFillRect(renderer, &rectangle);
-
-    if (frame % 12 == 0) {
+    if (frame % 5 == 0) {
 
         if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_UP){
             pallet_cursor.map_y = pallet_cursor.map_y - GRID_SIZE;
@@ -379,7 +390,7 @@ int pallet_move(SDL_Event e, SDL_Renderer *renderer) {
 
      }
 
-    if (frame <= 12000) {
+    if (frame <= 10000) {
         frame++;
     } else {
         frame = 0;
@@ -506,32 +517,401 @@ int clac_offset(int x, int y, int *offset_x, int *offset_y) {
 
 
 int draw_coordinate(SDL_Renderer *renderer, TTF_Font *font) {
+    char coordinate[10];
+
+    sprintf(coordinate, "%03d %03d", cursor.map_x / GRID_SIZE, cursor.map_y / GRID_SIZE);
+    display_character_string(renderer, font, coordinate, 695, 100);
+
+    return 0;
+
+}
+
+int save_file(char *file_name) {
+    FILE *fp;
+    char file[256] = {0};
+
+    sprintf(file, "%s.map", file_name);
+    if ((fp = fopen(file, "wb")) == NULL) {
+        return 1;
+    }
+    fwrite(&COL, sizeof(int), 1, fp);
+    fwrite(&ROW, sizeof(int), 1, fp);
+    fwrite(&OUT_OF_MAP, sizeof(int), 1, fp);
+    fwrite(map_array, sizeof(int) * COL * ROW, 1, fp);
+
+    fclose(fp);
+
+    return 0;
+}
+
+int load_file(char *file_name) {
+    FILE *fp;
+    char file[256] = {0};
+    int i = 0;
+
+    sprintf(file, "%s.map", file_name);
+    if ((fp = fopen(file, "rb")) == NULL) {
+        return 1;
+    }
+    fread(&COL, sizeof(int), 1, fp);
+    fread(&ROW, sizeof(int), 1, fp);
+    fread(&OUT_OF_MAP, sizeof(int), 1, fp);
+
+    while(!feof(fp)) {
+        fread(&map_array[i++], sizeof(int), 1, fp);
+    }
+
+    fclose(fp);
+
+    return 0;
+}
+
+int make_box(SDL_Renderer *renderer, int x, int y, int w, int h, int blend, COLOR color) {
+
+    SDL_Rect rectangle;
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+
+    rectangle.x = x;
+    rectangle.y = y;
+    rectangle.w = w;
+    rectangle.h = h;
+
+    if (color == WHITE) {
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, blend);
+    } else if (color == BLACK) {
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, blend);
+    }
+
+    SDL_RenderFillRect(renderer, &rectangle);
+
+    return 0;
+}
+
+int display_character_string(SDL_Renderer *renderer, TTF_Font *font, char *string, int x, int y) {
     SDL_Surface *surface;
     SDL_Texture *texture;
 
-    char path[256];
+    surface = TTF_RenderUTF8_Blended(font, string, (SDL_Color){255,255,255,255});
 
-    sprintf(path, "%03d %03d", cursor.map_x / GRID_SIZE, cursor.map_y / GRID_SIZE);
-    surface = TTF_RenderUTF8_Blended(font, path, (SDL_Color){255,255,255,255});
-
-    //surfaceからTextureを作る
-    texture =SDL_CreateTextureFromSurface(renderer, surface);
+    texture = SDL_CreateTextureFromSurface(renderer, surface);
 
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 
-    //文字を描写したTextureのサイズを取得する
     int iw,ih;
     SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
 
     SDL_Rect txtRect=(SDL_Rect){0,0,iw,ih};
-    SDL_Rect pasteRect=(SDL_Rect){695,100,iw,ih};
+    SDL_Rect pasteRect=(SDL_Rect){x,y,iw,ih};
 
     SDL_RenderCopy(renderer, texture, &txtRect, &pasteRect);
 
     SDL_FreeSurface(surface);
 
     return 0;
+}
 
+
+int display_save_window(SDL_Event e, SDL_Renderer *renderer, TTF_Font *font) {
+
+    char file_name[21] = {0};
+    char *status;
+
+    make_box(renderer, 244, 296, 304, 32, 255, WHITE);
+    make_box(renderer, 246, 298, 300, 28, 255, BLACK);
+
+    display_character_string(renderer, font, "SAVE?:", 250, 300);
+
+    // FONT_SIZE 22 ,11pt
+
+    SDL_RenderPresent(renderer);
+
+    accept_character_input(e, renderer, font, file_name, 316, 525);
+
+    if(save_file(file_name) == 0) {
+        status = "SAVED!";
+    } else {
+        status = "SAVING FAILD";
+    }
+
+    while(1) {
+        make_box(renderer, 244, 296, 304, 32, 255, WHITE);
+        make_box(renderer, 246, 298, 300, 28, 255, BLACK);
+        display_character_string(renderer, font, status, 250, 300);
+        SDL_RenderPresent(renderer);
+
+        if ( SDL_PollEvent(&e) ) {
+            if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_RETURN) {
+                break;
+            }
+        }
+    }
+
+    return 0;
+}
+
+int display_load_window(SDL_Event e, SDL_Renderer *renderer, TTF_Font *font) {
+
+    char file_name[21] = {0};
+    char *status;
+
+    make_box(renderer, 244, 296, 304, 32, 255, WHITE);
+    make_box(renderer, 246, 298, 300, 28, 255, BLACK);
+
+    display_character_string(renderer, font, "LOAD?:", 250, 300);
+
+    // FONT_SIZE 22 ,11pt
+
+    SDL_RenderPresent(renderer);
+
+    accept_character_input(e, renderer, font, file_name, 316, 525);
+
+    if(load_file(file_name) == 0) {
+        status = "LOADED!";
+    } else {
+        status = "LOADING FAILD";
+    }
+
+    while(1) {
+        make_box(renderer, 244, 296, 304, 32, 255, WHITE);
+        make_box(renderer, 246, 298, 300, 28, 255, BLACK);
+        display_character_string(renderer, font, status, 250, 300);
+        SDL_RenderPresent(renderer);
+
+        if ( SDL_PollEvent(&e) ) {
+            if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_RETURN) {
+                break;
+            }
+        }
+    }
+
+    return 0;
+}
+
+int accept_character_input(SDL_Event e, SDL_Renderer *renderer, TTF_Font *font,
+                           char *file_name, int start_pt, int end_pt) {
+    char buf[21] = {0};
+    int pt = start_pt;
+    int file_name_element = 0;
+
+    while(1) {
+
+        if ( SDL_PollEvent(&e) ) {
+            if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE) {
+                break;
+            }
+
+            if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_RETURN) {
+                break;
+            }
+
+            if (pt <= end_pt) {
+                if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_a) {
+                    display_character_string(renderer, font, "A", pt, 300);
+                    pt = pt + 11;
+                    strcat(file_name, "a");
+                    file_name_element++;
+                } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_b) {
+                    display_character_string(renderer, font, "B", pt, 300);
+                    pt = pt + 11;
+                    strcat(file_name, "b");
+                    file_name_element++;
+                } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_c) {
+                    display_character_string(renderer, font, "C", pt, 300);
+                    pt = pt + 11;
+                    strcat(file_name, "c");
+                    file_name_element++;
+                } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_d) {
+                    display_character_string(renderer, font, "D", pt, 300);
+                    pt = pt + 11;
+                    strcat(file_name, "d");
+                    file_name_element++;
+                } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_e) {
+                    display_character_string(renderer, font, "E", pt, 300);
+                    pt = pt + 11;
+                    strcat(file_name, "e");
+                    file_name_element++;
+                } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_f) {
+                    display_character_string(renderer, font, "F", pt, 300);
+                    pt = pt + 11;
+                    strcat(file_name, "f");
+                    file_name_element++;
+                } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_g) {
+                    display_character_string(renderer, font, "G", pt, 300);
+                    pt = pt + 11;
+                    strcat(file_name, "g");
+                    file_name_element++;
+                } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_h) {
+                    display_character_string(renderer, font, "H", pt, 300);
+                    pt = pt + 11;
+                    strcat(file_name, "h");
+                    file_name_element++;
+                } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_i) {
+                    display_character_string(renderer, font, "I", pt, 300);
+                    pt = pt + 11;
+                    strcat(file_name, "i");
+                    file_name_element++;
+                } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_j) {
+                    display_character_string(renderer, font, "J", pt, 300);
+                    pt = pt + 11;
+                    strcat(file_name, "j");
+                    file_name_element++;
+                } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_k) {
+                    display_character_string(renderer, font, "K", pt, 300);
+                    pt = pt + 11;
+                    strcat(file_name, "k");
+                    file_name_element++;
+                } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_l) {
+                    display_character_string(renderer, font, "L", pt, 300);
+                    pt = pt + 11;
+                    strcat(file_name, "l");
+                    file_name_element++;
+                } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_m) {
+                    display_character_string(renderer, font, "M", pt, 300);
+                    pt = pt + 11;
+                    strcat(file_name, "m");
+                    file_name_element++;
+                } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_n) {
+                    display_character_string(renderer, font, "N", pt, 300);
+                    pt = pt + 11;
+                    strcat(file_name, "n");
+                    file_name_element++;
+                } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_o) {
+                    display_character_string(renderer, font, "O", pt, 300);
+                    pt = pt + 11;
+                    strcat(file_name, "o");
+                    file_name_element++;
+                } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_p) {
+                    display_character_string(renderer, font, "P", pt, 300);
+                    pt = pt + 11;
+                    strcat(file_name, "p");
+                    file_name_element++;
+                } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_q) {
+                    display_character_string(renderer, font, "Q", pt, 300);
+                    pt = pt + 11;
+                    strcat(file_name, "q");
+                    file_name_element++;
+                } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_r) {
+                    display_character_string(renderer, font, "R", pt, 300);
+                    pt = pt + 11;
+                    strcat(file_name, "r");
+                    file_name_element++;
+                } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_s) {
+                    display_character_string(renderer, font, "S", pt, 300);
+                    pt = pt + 11;
+                    strcat(file_name, "s");
+                    file_name_element++;
+                } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_t) {
+                    display_character_string(renderer, font, "T", pt, 300);
+                    pt = pt + 11;
+                    strcat(file_name, "t");
+                    file_name_element++;
+                } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_u) {
+                    display_character_string(renderer, font, "U", pt, 300);
+                    pt = pt + 11;
+                    strcat(file_name, "u");
+                    file_name_element++;
+                } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_v) {
+                    display_character_string(renderer, font, "V", pt, 300);
+                    pt = pt + 11;
+                    strcat(file_name, "v");
+                    file_name_element++;
+                } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_w) {
+                    display_character_string(renderer, font, "W", pt, 300);
+                    pt = pt + 11;
+                    strcat(file_name, "w");
+                    file_name_element++;
+                } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_x) {
+                    display_character_string(renderer, font, "X", pt, 300);
+                    pt = pt + 11;
+                    strcat(file_name, "x");
+                    file_name_element++;
+                } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_y) {
+                    display_character_string(renderer, font, "Y", pt, 300);
+                    pt = pt + 11;
+                    strcat(file_name, "y");
+                    file_name_element++;
+                } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_z) {
+                    display_character_string(renderer, font, "Z", pt, 300);
+                    pt = pt + 11;
+                    strcat(file_name, "z");
+                    file_name_element++;
+                } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_0) {
+                    display_character_string(renderer, font, "0", pt, 300);
+                    pt = pt + 11;
+                    strcat(file_name, "0");
+                    file_name_element++;
+                } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_1) {
+                    display_character_string(renderer, font, "1", pt, 300);
+                    pt = pt + 11;
+                    strcat(file_name, "1");
+                    file_name_element++;
+                } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_2) {
+                    display_character_string(renderer, font, "2", pt, 300);
+                    pt = pt + 11;
+                    strcat(file_name, "2");
+                    file_name_element++;
+                } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_3) {
+                    display_character_string(renderer, font, "3", pt, 300);
+                    pt = pt + 11;
+                    strcat(file_name, "3");
+                    file_name_element++;
+                } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_4) {
+                    display_character_string(renderer, font, "4", pt, 300);
+                    pt = pt + 11;
+                    strcat(file_name, "4");
+                    file_name_element++;
+                } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_5) {
+                    display_character_string(renderer, font, "5", pt, 300);
+                    pt = pt + 11;
+                    strcat(file_name, "5");
+                    file_name_element++;
+                } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_6) {
+                    display_character_string(renderer, font, "6", pt, 300);
+                    pt = pt + 11;
+                    strcat(file_name, "6");
+                    file_name_element++;
+                } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_7) {
+                    display_character_string(renderer, font, "7", pt, 300);
+                    pt = pt + 11;
+                    strcat(file_name, "7");
+                    file_name_element++;
+                } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_8) {
+                    display_character_string(renderer, font, "8", pt, 300);
+                    pt = pt + 11;
+                    strcat(file_name, "8");
+                    file_name_element++;
+                } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_9) {
+                    display_character_string(renderer, font, "9", pt, 300);
+                    pt = pt + 11;
+                    strcat(file_name, "9");
+                    file_name_element++;
+                } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SLASH) {
+                    display_character_string(renderer, font, "_", pt, 300);
+                    pt = pt + 11;
+                    strcat(file_name, "_");
+                    file_name_element++;
+                }
+            }
+
+            if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_BACKSPACE) {
+                if (start_pt < pt) {
+                    make_box(renderer, pt - 11, 301, 11, 22, 255, BLACK);
+                    pt = pt - 11;
+
+                    file_name_element--;
+                    strncpy(buf, file_name, file_name_element);
+                    memset(file_name, '\0', 20);
+                    sprintf(file_name, "%s", buf);
+                    memset(buf, '\0', 20);
+                }
+            }
+        }
+
+        SDL_RenderPresent(renderer);
+
+    }
+
+    return 0;
 }
 
 
