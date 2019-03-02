@@ -27,7 +27,7 @@ NPC npc[256] = {0};
 
 MAPCHIP mapchip[256] = {0};
 
-int map_array[65536] = {0};
+int *map_array;
 
 
 int main (int argc, char *argv[]) {
@@ -489,27 +489,22 @@ int fade_out(SDL_Renderer *renderer) {
 
 int load_map(char *map_name) {
     FILE *fp;
-    int map_num;
-
-    fp = fopen(map_name, "r");
-    if (fp == NULL) {
-        printf("file open error. %d\n", __LINE__);
+    int i = 0;
+    if ((fp = fopen(map_name, "rb")) == NULL) {
         return 1;
     }
 
-    fscanf(fp, "%d%d", &COL, &ROW);
-    fscanf(fp, "%d", &OUT_OF_MAP);
+    fread(&COL, sizeof(int), 1, fp);
+    fread(&ROW, sizeof(int), 1, fp);
+    fread(&OUT_OF_MAP, sizeof(int), 1, fp);
 
-    int i = 0;
-    while((map_num = fgetc(fp)) != EOF){
-        if(map_num != 0x0d){
-            if(map_num != 0x0a){
-                map_array[i] = map_num - 48;
-                i++;
-            }
-       }
+    map_array = realloc(map_array, sizeof(int) * COL * ROW);
+
+    while(!feof(fp)) {
+        fread(&map_array[i++], sizeof(int), 1, fp);
     }
 
+    fclose(fp);
 
     return 0;
 }
