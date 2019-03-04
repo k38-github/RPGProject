@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
@@ -18,6 +20,7 @@ const int FONT_SIZE = 22;
 int ROW = 15;
 int COL = 20;
 int OUT_OF_MAP = 10;
+char FILE_NAME[20] = "NEW";
 int frame = 0;
 
 typedef enum {WHITE, BLACK} COLOR;
@@ -47,6 +50,7 @@ int load_file(char *);
 int save_file(char *);
 int display_save_window(SDL_Event, SDL_Renderer *, TTF_Font *);
 int draw_coordinate(SDL_Renderer *, TTF_Font *);
+int draw_filename(SDL_Renderer *, TTF_Font *);
 int clac_offset(int, int, int *, int *);
 int load_mapchip(SDL_Renderer *);
 int draw_map(SDL_Renderer *);
@@ -143,7 +147,7 @@ int main (int argc, char *argv[]) {
         draw_selected_mapchip(renderer);
 
         draw_coordinate(renderer, font);
-
+        draw_filename(renderer, font);
 
         SDL_RenderPresent(renderer);
 
@@ -160,7 +164,6 @@ int main (int argc, char *argv[]) {
                       (e.key.keysym.sym == SDLK_RCTRL || e.key.keysym.sym == SDLK_LCTRL)) {
                 ctrl = CTRL_OFF;
             } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_s) {
-                // save_file();
                 if (ctrl == CTRL_ON) {
                     ctrl = CTRL_OFF;
                     display_save_window(e, renderer, font);
@@ -169,6 +172,11 @@ int main (int argc, char *argv[]) {
                 if (ctrl == CTRL_ON) {
                     ctrl = CTRL_OFF;
                     display_load_window(e, renderer, font);
+                }
+            } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_n) {
+                if (ctrl == CTRL_ON) {
+                    ctrl = CTRL_OFF;
+                    display_new_window(e, renderer, font);
                 }
             } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_i) {
                 if (pallet_display == PALLET_DISPLAY_OFF) {
@@ -526,14 +534,37 @@ int draw_coordinate(SDL_Renderer *renderer, TTF_Font *font) {
 
 }
 
+int draw_filename(SDL_Renderer *renderer, TTF_Font *font) {
+
+    display_character_string(renderer, font, FILE_NAME, 695, 130);
+
+    return 0;
+
+}
+
 int save_file(char *file_name) {
     FILE *fp;
     char file[256] = {0};
+    int i = 0;
+
+    sprintf(FILE_NAME, "%s", file_name);
+    while (FILE_NAME[i] != '\0') {
+        FILE_NAME[i] = toupper((unsigned char)FILE_NAME[i]);
+        i++;
+    }
 
     sprintf(file, "%s.map", file_name);
+
+    i = 0;
+    while (file[i] != '\0') {
+        file[i] = tolower((unsigned char)file[i]);
+        i++;
+    }
+
     if ((fp = fopen(file, "wb")) == NULL) {
         return 1;
     }
+
     fwrite(&COL, sizeof(int), 1, fp);
     fwrite(&ROW, sizeof(int), 1, fp);
     fwrite(&OUT_OF_MAP, sizeof(int), 1, fp);
@@ -549,7 +580,20 @@ int load_file(char *file_name) {
     char file[256] = {0};
     int i = 0;
 
+    sprintf(FILE_NAME, "%s", file_name);
+    while (FILE_NAME[i] != '\0') {
+        FILE_NAME[i] = toupper((unsigned char)FILE_NAME[i]);
+        i++;
+    }
+
     sprintf(file, "%s.map", file_name);
+
+    i = 0;
+    while (file_name[i] != '\0') {
+        file_name[i] = tolower((unsigned char)file_name[i]);
+        i++;
+    }
+
     if ((fp = fopen(file, "rb")) == NULL) {
         return 1;
     }
@@ -557,6 +601,11 @@ int load_file(char *file_name) {
     fread(&ROW, sizeof(int), 1, fp);
     fread(&OUT_OF_MAP, sizeof(int), 1, fp);
 
+    OUT_OF_MAP = 10;
+
+    map_array = realloc(map_array, sizeof(int) * COL * ROW);
+
+    i = 0;
     while(!feof(fp)) {
         fread(&map_array[i++], sizeof(int), 1, fp);
     }
@@ -610,11 +659,90 @@ int display_character_string(SDL_Renderer *renderer, TTF_Font *font, char *strin
     return 0;
 }
 
+int display_new_window(SDL_Event e, SDL_Renderer *renderer, TTF_Font *font) {
+
+    int i = 0;
+    char file_name[21] = {0};
+    char *status;
+    long col;
+    long row;
+    char *endptr;
+
+    make_box(renderer, 244, 296, 304, 32, 255, WHITE);
+    make_box(renderer, 246, 298, 300, 28, 255, BLACK);
+
+    display_character_string(renderer, font, "NEW? :", 250, 300);
+    SDL_RenderPresent(renderer);
+
+    if (accept_character_input(e, renderer, font, file_name, 316, 525) == 0) {
+
+        sprintf(FILE_NAME, "%s", file_name);
+        while (FILE_NAME[i] != '\0') {
+            FILE_NAME[i] = toupper((unsigned char)FILE_NAME[i]);
+            i++;
+        }
+
+        memset(file_name, '\0', 21);
+
+        make_box(renderer, 244, 296, 304, 32, 255, WHITE);
+        make_box(renderer, 246, 298, 300, 28, 255, BLACK);
+
+        display_character_string(renderer, font, "COL? :", 250, 300);
+        SDL_RenderPresent(renderer);
+
+        accept_character_input(e, renderer, font, file_name, 316, 525);
+
+        col = strtol(file_name, &endptr, 10);
+        if (file_name == endptr) {
+           puts("could not convert to number");
+        }
+
+        if (col > INT_MAX || col < INT_MIN) {
+           puts("can not convert to int type");
+        }
+        COL = (int)col;
+
+        memset(file_name, '\0', 21);
+
+        make_box(renderer, 244, 296, 304, 32, 255, WHITE);
+        make_box(renderer, 246, 298, 300, 28, 255, BLACK);
+
+        display_character_string(renderer, font, "ROW? :", 250, 300);
+        SDL_RenderPresent(renderer);
+
+        accept_character_input(e, renderer, font, file_name, 316, 525);
+
+        row = strtol(file_name, &endptr, 10);
+        if (file_name == endptr) {
+           puts("could not convert to number");
+        }
+
+        if (row > INT_MAX || row < INT_MIN) {
+           puts("can not convert to int type");
+        }
+        ROW = (int)row;
+
+
+        map_array = realloc(map_array, sizeof(int) * COL * ROW);
+
+        int i;
+        for (i=0;i <= COL*ROW;i++) {
+            map_array[i] = 1;
+        }
+
+    }
+
+
+    return 0;
+}
 
 int display_save_window(SDL_Event e, SDL_Renderer *renderer, TTF_Font *font) {
 
     char file_name[21] = {0};
+    char out_of_map_name[21] = {0};
     char *status;
+    long out_of_map;
+    char *endptr;
 
     make_box(renderer, 244, 296, 304, 32, 255, WHITE);
     make_box(renderer, 246, 298, 300, 28, 255, BLACK);
@@ -625,23 +753,46 @@ int display_save_window(SDL_Event e, SDL_Renderer *renderer, TTF_Font *font) {
 
     SDL_RenderPresent(renderer);
 
-    accept_character_input(e, renderer, font, file_name, 316, 525);
+    sprintf(file_name, "%s", FILE_NAME);
+    if (accept_character_input(e, renderer, font, file_name, 316, 525) == 0) {
 
-    if(save_file(file_name) == 0) {
-        status = "SAVED!";
-    } else {
-        status = "SAVING FAILD";
-    }
-
-    while(1) {
         make_box(renderer, 244, 296, 304, 32, 255, WHITE);
         make_box(renderer, 246, 298, 300, 28, 255, BLACK);
-        display_character_string(renderer, font, status, 250, 300);
+
+        display_character_string(renderer, font, "OUT_OF_MAP?:", 250, 300);
         SDL_RenderPresent(renderer);
 
-        if ( SDL_PollEvent(&e) ) {
-            if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_RETURN) {
-                break;
+        if (accept_character_input(e, renderer, font, out_of_map_name, 382, 525) == 0) {
+            out_of_map = strtol(out_of_map_name, &endptr, 10);
+            if (file_name == endptr) {
+               puts("could not convert to number");
+            }
+
+            if (out_of_map > INT_MAX || out_of_map < INT_MIN) {
+               puts("can not convert to int type");
+            }
+            OUT_OF_MAP = (int)out_of_map;
+
+
+            if(save_file(file_name) == 0) {
+                status = "SAVED!";
+            } else {
+                status = "SAVING FAILD";
+            }
+
+            OUT_OF_MAP = 10;
+
+            while(1) {
+                make_box(renderer, 244, 296, 304, 32, 255, WHITE);
+                make_box(renderer, 246, 298, 300, 28, 255, BLACK);
+                display_character_string(renderer, font, status, 250, 300);
+                SDL_RenderPresent(renderer);
+
+                if ( SDL_PollEvent(&e) ) {
+                    if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_RETURN) {
+                        break;
+                    }
+                }
             }
         }
     }
@@ -663,23 +814,24 @@ int display_load_window(SDL_Event e, SDL_Renderer *renderer, TTF_Font *font) {
 
     SDL_RenderPresent(renderer);
 
-    accept_character_input(e, renderer, font, file_name, 316, 525);
+    if (accept_character_input(e, renderer, font, file_name, 316, 525) == 0) {
 
-    if(load_file(file_name) == 0) {
-        status = "LOADED!";
-    } else {
-        status = "LOADING FAILD";
-    }
+        if(load_file(file_name) == 0) {
+            status = "LOADED!";
+        } else {
+            status = "LOADING FAILD";
+        }
 
-    while(1) {
-        make_box(renderer, 244, 296, 304, 32, 255, WHITE);
-        make_box(renderer, 246, 298, 300, 28, 255, BLACK);
-        display_character_string(renderer, font, status, 250, 300);
-        SDL_RenderPresent(renderer);
+        while(1) {
+            make_box(renderer, 244, 296, 304, 32, 255, WHITE);
+            make_box(renderer, 246, 298, 300, 28, 255, BLACK);
+            display_character_string(renderer, font, status, 250, 300);
+            SDL_RenderPresent(renderer);
 
-        if ( SDL_PollEvent(&e) ) {
-            if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_RETURN) {
-                break;
+            if ( SDL_PollEvent(&e) ) {
+                if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_RETURN) {
+                    break;
+                }
             }
         }
     }
@@ -692,12 +844,19 @@ int accept_character_input(SDL_Event e, SDL_Renderer *renderer, TTF_Font *font,
     char buf[21] = {0};
     int pt = start_pt;
     int file_name_element = 0;
+    int i;
+
+    for(i=0;(int)strlen(file_name)>i;i++) {
+        display_character_string(renderer, font, &file_name[i], pt, 300);
+        pt = pt + 11;
+        file_name_element++;
+    }
 
     while(1) {
 
         if ( SDL_PollEvent(&e) ) {
             if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE) {
-                break;
+                return 1;
             }
 
             if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_RETURN) {
@@ -913,5 +1072,3 @@ int accept_character_input(SDL_Event e, SDL_Renderer *renderer, TTF_Font *font,
 
     return 0;
 }
-
-
