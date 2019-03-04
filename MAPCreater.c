@@ -20,6 +20,7 @@ const int FONT_SIZE = 22;
 int ROW = 15;
 int COL = 20;
 int OUT_OF_MAP = 10;
+int OUTER_PERIPHERY = 1;
 char FILE_NAME[20] = "NEW";
 int frame = 0;
 
@@ -51,10 +52,13 @@ int save_file(char *);
 int display_save_window(SDL_Event, SDL_Renderer *, TTF_Font *);
 int draw_coordinate(SDL_Renderer *, TTF_Font *);
 int draw_filename(SDL_Renderer *, TTF_Font *);
+int draw_outer_periphery(SDL_Renderer *, TTF_Font *);
 int clac_offset(int, int, int *, int *);
 int load_mapchip(SDL_Renderer *);
 int draw_map(SDL_Renderer *);
 int draw_pallet(SDL_Renderer *);
+int draw_selected_mapchip(SDL_Renderer *);
+int draw_selected_outer_periphery(SDL_Renderer *);
 int cursor_move(SDL_Event, SDL_Renderer *);
 int load_image(SDL_Renderer *, SDL_Texture **, char *);
 int place_mapchip(SDL_Point, SDL_Renderer *);
@@ -63,6 +67,7 @@ int get_mapchip(SDL_Point, SDL_Renderer *);
 int get_mapchip_right_click(SDL_Point, SDL_Renderer *);
 int get_mapchip_with_key(SDL_Renderer *);
 int get_mapchip_with_key_a(SDL_Renderer *);
+int get_mapchip_with_key_o(SDL_Renderer *);
 int initialize(SDL_Renderer *);
 
 
@@ -145,9 +150,11 @@ int main (int argc, char *argv[]) {
         }
 
         draw_selected_mapchip(renderer);
+        draw_selected_outer_periphery(renderer);
 
         draw_coordinate(renderer, font);
         draw_filename(renderer, font);
+        draw_outer_periphery(renderer, font);
 
         SDL_RenderPresent(renderer);
 
@@ -187,6 +194,8 @@ int main (int argc, char *argv[]) {
             } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_a &&
                        pallet_display == PALLET_DISPLAY_OFF) {
                 get_mapchip_with_key_a(renderer);
+            } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_o) {
+                get_mapchip_with_key_o(renderer);
             } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SPACE &&
                        pallet_display == PALLET_DISPLAY_ON) {
                 get_mapchip_with_key(renderer);
@@ -321,6 +330,22 @@ int get_mapchip_with_key_a(SDL_Renderer *renderer) {
 
 }
 
+int get_mapchip_with_key_o(SDL_Renderer *renderer) {
+
+    if (pallet_display == PALLET_DISPLAY_ON) {
+        OUTER_PERIPHERY =
+           pallet_array[(pallet_cursor.map_y / GRID_SIZE) * PALLET_COL +
+                        (pallet_cursor.map_x / GRID_SIZE)];
+    } else {
+        OUTER_PERIPHERY =
+           map_array[(cursor.map_y / GRID_SIZE) * COL +
+                        (cursor.map_x / GRID_SIZE)];
+    }
+
+    return 0;
+
+}
+
 int draw_selected_mapchip(SDL_Renderer *renderer) {
     make_box(renderer, 700, 30, 62, 62, 255, WHITE);
     make_box(renderer, 702, 32, 58, 58, 255, BLACK);
@@ -331,6 +356,21 @@ int draw_selected_mapchip(SDL_Renderer *renderer) {
                                  IMAGE_WIDTH*MAGNIFICATION, IMAGE_HEIGHT*MAGNIFICATION};
 
     SDL_RenderCopy(renderer, mapchip[select_mapchip].map_image, &imageRect, &drawRect);
+
+
+    return 0;
+}
+
+int draw_selected_outer_periphery(SDL_Renderer *renderer) {
+    make_box(renderer, 700, 170, 62, 62, 255, WHITE);
+    make_box(renderer, 702, 172, 58, 58, 255, BLACK);
+
+    SDL_Rect imageRect=(SDL_Rect){0, 0, IMAGE_WIDTH, IMAGE_HEIGHT};
+    SDL_Rect drawRect=(SDL_Rect){715,
+                                 185,
+                                 IMAGE_WIDTH*MAGNIFICATION, IMAGE_HEIGHT*MAGNIFICATION};
+
+    SDL_RenderCopy(renderer, mapchip[OUTER_PERIPHERY].map_image, &imageRect, &drawRect);
 
 
     return 0;
@@ -542,6 +582,14 @@ int draw_filename(SDL_Renderer *renderer, TTF_Font *font) {
 
 }
 
+int draw_outer_periphery(SDL_Renderer *renderer, TTF_Font *font) {
+
+    display_character_string(renderer, font, "OUT_OF_MAP", 680, 250);
+
+    return 0;
+
+}
+
 int save_file(char *file_name) {
     FILE *fp;
     char file[256] = {0};
@@ -567,7 +615,7 @@ int save_file(char *file_name) {
 
     fwrite(&COL, sizeof(int), 1, fp);
     fwrite(&ROW, sizeof(int), 1, fp);
-    fwrite(&OUT_OF_MAP, sizeof(int), 1, fp);
+    fwrite(&OUTER_PERIPHERY, sizeof(int), 1, fp);
     fwrite(map_array, sizeof(int) * COL * ROW, 1, fp);
 
     fclose(fp);
@@ -739,9 +787,7 @@ int display_new_window(SDL_Event e, SDL_Renderer *renderer, TTF_Font *font) {
 int display_save_window(SDL_Event e, SDL_Renderer *renderer, TTF_Font *font) {
 
     char file_name[21] = {0};
-    char out_of_map_name[21] = {0};
     char *status;
-    long out_of_map;
     char *endptr;
 
     make_box(renderer, 244, 296, 304, 32, 255, WHITE);
@@ -759,39 +805,21 @@ int display_save_window(SDL_Event e, SDL_Renderer *renderer, TTF_Font *font) {
         make_box(renderer, 244, 296, 304, 32, 255, WHITE);
         make_box(renderer, 246, 298, 300, 28, 255, BLACK);
 
-        display_character_string(renderer, font, "OUT_OF_MAP?:", 250, 300);
-        SDL_RenderPresent(renderer);
+        if(save_file(file_name) == 0) {
+            status = "SAVED!";
+        } else {
+            status = "SAVING FAILD";
+        }
 
-        if (accept_character_input(e, renderer, font, out_of_map_name, 382, 525) == 0) {
-            out_of_map = strtol(out_of_map_name, &endptr, 10);
-            if (file_name == endptr) {
-               puts("could not convert to number");
-            }
+        while(1) {
+            make_box(renderer, 244, 296, 304, 32, 255, WHITE);
+            make_box(renderer, 246, 298, 300, 28, 255, BLACK);
+            display_character_string(renderer, font, status, 250, 300);
+            SDL_RenderPresent(renderer);
 
-            if (out_of_map > INT_MAX || out_of_map < INT_MIN) {
-               puts("can not convert to int type");
-            }
-            OUT_OF_MAP = (int)out_of_map;
-
-
-            if(save_file(file_name) == 0) {
-                status = "SAVED!";
-            } else {
-                status = "SAVING FAILD";
-            }
-
-            OUT_OF_MAP = 10;
-
-            while(1) {
-                make_box(renderer, 244, 296, 304, 32, 255, WHITE);
-                make_box(renderer, 246, 298, 300, 28, 255, BLACK);
-                display_character_string(renderer, font, status, 250, 300);
-                SDL_RenderPresent(renderer);
-
-                if ( SDL_PollEvent(&e) ) {
-                    if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_RETURN) {
-                        break;
-                    }
+            if ( SDL_PollEvent(&e) ) {
+                if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_RETURN) {
+                    break;
                 }
             }
         }
