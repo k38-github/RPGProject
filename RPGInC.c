@@ -56,6 +56,7 @@ int main (int argc, char *argv[]) {
 
     // main loop
     while (1) {
+        SDL_Delay(5);
         SDL_Event e;
 
         clac_offset(player.pixel_x, player.pixel_y, &player.offset_x, &player.offset_y);
@@ -204,22 +205,22 @@ int player_move(SDL_Event e) {
 }
 
 int load_npc(SDL_Renderer *renderer) {
-    char event_path[256];
+    char event_path[256] = {0};
 
     sprintf(event_path, "data/%s.evt", MAP_EVENT_NAME);
 
     FILE *fp;
-    char event[256];
-    char npc_name[256];
+    char event[256] = {0};
+    char npc_name[256] = {0};
     int map_x;
     int map_y;
     DIRECTION direction;
     MOVING moving;
     int max_step;
-    char message[1024];
+    char message[1024] = {0};
 
-    char buf[256];
-    char npc_path[256];
+    char buf[256] = {0};
+    char npc_path[256] = {0};
     int i = 0;
     int element_number = 0;
 
@@ -387,18 +388,18 @@ int draw_map(SDL_Renderer *renderer){
 }
 
 int load_move(SDL_Renderer *renderer) {
-    char event_path[256];
+    char event_path[256] = {0};
 
     sprintf(event_path, "data/%s.evt", MAP_EVENT_NAME);
 
     FILE *fp;
-    char event[256];
+    char event[256] = {0};
     int event_point_x;
     int event_point_y;
     DIRECTION direction_of_penetration;
-    char buf[256];
-    char new_map_name[256];
-    char map_path[256];
+    char buf[256] = {0};
+    char new_map_name[256] = {0};
+    char map_path[256] = {0};
     int new_x;
     int new_y;
     int i = 0;
@@ -432,6 +433,8 @@ int load_move(SDL_Renderer *renderer) {
                         load_npc(renderer);
 
                         fade_out(renderer);
+
+                        break;
                     }
                 }
             }
@@ -513,9 +516,9 @@ int load_mapchip(SDL_Renderer *renderer) {
 
     FILE *fp;
     int x, y, z;
-    char n[256];
-    char path[256];
-    char buf[256];
+    char n[256] = {0};
+    char path[256] = {0};
+    char buf[256] = {0};
     int i = 0;
 
     fp = fopen("data/mapchip.dat", "r");
