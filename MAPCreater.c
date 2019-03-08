@@ -23,10 +23,13 @@ int OUT_OF_MAP = 10;
 int OUTER_PERIPHERY = 1;
 char FILE_NAME[20] = "NEW";
 int frame = 0;
+int SELECT_X = 0;
+int SELECT_Y = 0;
 
 typedef enum {WHITE, BLACK} COLOR;
 typedef enum {CTRL_OFF, CTRL_ON} CTRL;
 typedef enum {PALLET_DISPLAY_OFF, PALLET_DISPLAY_ON} PALLET_DISPLAY;
+typedef enum {SHORT_SHARP_SELECTION_OFF, SHORT_SHARP_SELECTION_ON} SHORT_SHARP_SELECTION;
 
 typedef struct {
     int map_x;
@@ -82,6 +85,7 @@ MAPCHIP mapchip[256] = {0};
 
 CTRL ctrl = CTRL_OFF;
 PALLET_DISPLAY pallet_display = PALLET_DISPLAY_OFF;
+SHORT_SHARP_SELECTION short_sharp_selection = SHORT_SHARP_SELECTION_OFF;
 
 int main (int argc, char *argv[]) {
 
@@ -163,7 +167,11 @@ int main (int argc, char *argv[]) {
             if (e.type == SDL_QUIT) {
                 break;
             } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE) {
-                break;
+                if (short_sharp_selection == SHORT_SHARP_SELECTION_ON) {
+                    short_sharp_selection = SHORT_SHARP_SELECTION_OFF;
+                } else {
+                    break;
+                }
             } else if (e.type == SDL_KEYDOWN &&
                       (e.key.keysym.sym == SDLK_RCTRL || e.key.keysym.sym == SDLK_LCTRL)) {
                 ctrl = CTRL_ON;
@@ -184,6 +192,13 @@ int main (int argc, char *argv[]) {
                 if (ctrl == CTRL_ON) {
                     ctrl = CTRL_OFF;
                     display_new_window(e, renderer, font);
+                }
+            } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_v) {
+                if (ctrl == CTRL_ON) {
+                    ctrl = CTRL_OFF;
+                    short_sharp_selection = SHORT_SHARP_SELECTION_ON;
+                    SELECT_X = cursor.map_x;
+                    SELECT_Y = cursor.map_y;
                 }
             } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_i) {
                 if (pallet_display == PALLET_DISPLAY_OFF) {
@@ -381,7 +396,31 @@ int cursor_move(SDL_Event e, SDL_Renderer *renderer) {
     int cursor_x = cursor.map_x - cursor.offset_x;
     int cursor_y = cursor.map_y - cursor.offset_y;
 
-    make_box(renderer, cursor_x, cursor_y, GRID_SIZE, GRID_SIZE, 100, BLACK);
+    int short_sharp_x = SELECT_X - cursor.offset_x;
+    int short_sharp_y = SELECT_Y - cursor.offset_y;
+
+    int range_x = 0;
+    int range_y = 0;
+
+    if (short_sharp_selection == SHORT_SHARP_SELECTION_ON) {
+        if (cursor_x - short_sharp_x < 0) {
+            short_sharp_x = short_sharp_x + GRID_SIZE;
+            range_x = cursor_x - short_sharp_x;
+        } else {
+            range_x = cursor_x - short_sharp_x + GRID_SIZE;
+        }
+
+        if (cursor_y - short_sharp_y < 0) {
+            short_sharp_y = short_sharp_y + GRID_SIZE;
+            range_y = cursor_y - short_sharp_y;
+        } else {
+            range_y = cursor_y - short_sharp_y + GRID_SIZE;
+        }
+
+        make_box(renderer, short_sharp_x, short_sharp_y,range_x, range_y, 100, BLACK);
+    } else {
+        make_box(renderer, cursor_x, cursor_y, GRID_SIZE, GRID_SIZE, 100, BLACK);
+    }
 
     if (frame % 5 == 0) {
 
@@ -601,7 +640,7 @@ int save_file(char *file_name) {
         i++;
     }
 
-    sprintf(file, "%s.map", file_name);
+    sprintf(file, "data/%s.map", file_name);
 
     i = 0;
     while (file[i] != '\0') {
@@ -634,7 +673,7 @@ int load_file(char *file_name) {
         i++;
     }
 
-    sprintf(file, "%s.map", file_name);
+    sprintf(file, "data/%s.map", file_name);
 
     i = 0;
     while (file_name[i] != '\0') {
