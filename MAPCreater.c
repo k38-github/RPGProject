@@ -54,7 +54,7 @@ int load_file(char *);
 int save_file(char *);
 int display_save_window(SDL_Event, SDL_Renderer *, TTF_Font *);
 int draw_coordinate(SDL_Renderer *, TTF_Font *);
-int draw_filename(SDL_Renderer *, TTF_Font *);
+int draw_filename(SDL_Window *);
 int draw_outer_periphery(SDL_Renderer *, TTF_Font *);
 int clac_offset(int, int, int *, int *);
 int load_mapchip(SDL_Renderer *);
@@ -157,7 +157,7 @@ int main (int argc, char *argv[]) {
         draw_selected_outer_periphery(renderer);
 
         draw_coordinate(renderer, font);
-        draw_filename(renderer, font);
+        draw_filename(window);
         draw_outer_periphery(renderer, font);
 
         SDL_RenderPresent(renderer);
@@ -639,18 +639,31 @@ int clac_offset(int x, int y, int *offset_x, int *offset_y) {
 
 
 int draw_coordinate(SDL_Renderer *renderer, TTF_Font *font) {
-    char coordinate[10];
 
-    sprintf(coordinate, "%03d %03d", cursor.map_x / GRID_SIZE, cursor.map_y / GRID_SIZE);
+    char coordinate[10];
+    int coordinate_x = cursor.map_x;
+    int coordinate_y = cursor.map_y;
+
+    if (coordinate_x < 0) {
+        coordinate_x--;
+    }
+
+    if (coordinate_y < 0) {
+        coordinate_y--;
+    }
+
+    sprintf(coordinate, "%03d %03d", coordinate_x / GRID_SIZE, coordinate_y / GRID_SIZE);
     display_character_string(renderer, font, coordinate, 695, 100);
 
     return 0;
 
 }
 
-int draw_filename(SDL_Renderer *renderer, TTF_Font *font) {
+int draw_filename(SDL_Window *window) {
+    char title_name[256] = {0};
 
-    display_character_string(renderer, font, FILE_NAME, 695, 130);
+    sprintf(title_name, "MAP CREATER(%s)", FILE_NAME);
+    SDL_SetWindowTitle(window, title_name);
 
     return 0;
 
@@ -702,15 +715,8 @@ int load_file(char *file_name) {
     char file[256] = {0};
     int i = 0;
 
-    sprintf(FILE_NAME, "%s", file_name);
-    while (FILE_NAME[i] != '\0') {
-        FILE_NAME[i] = toupper((unsigned char)FILE_NAME[i]);
-        i++;
-    }
-
     sprintf(file, "data/%s.map", file_name);
 
-    i = 0;
     while (file_name[i] != '\0') {
         file_name[i] = tolower((unsigned char)file_name[i]);
         i++;
@@ -719,9 +725,18 @@ int load_file(char *file_name) {
     if ((fp = fopen(file, "rb")) == NULL) {
         return 1;
     }
+
+    sprintf(FILE_NAME, "%s", file_name);
+
+    i = 0;
+    while (FILE_NAME[i] != '\0') {
+        FILE_NAME[i] = toupper((unsigned char)FILE_NAME[i]);
+        i++;
+    }
+
     fread(&COL, sizeof(int), 1, fp);
     fread(&ROW, sizeof(int), 1, fp);
-    fread(&OUT_OF_MAP, sizeof(int), 1, fp);
+    fread(&OUTER_PERIPHERY, sizeof(int), 1, fp);
 
     OUT_OF_MAP = 10;
 
