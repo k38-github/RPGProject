@@ -4,9 +4,11 @@
 #include <stdio.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
 
 typedef enum {DOWN, LEFT, RIGHT, UP} DIRECTION;
 typedef enum {FALSE, TRUE} MOVING;
+typedef enum {OUT_VISIBLE, IN_VISIBLE} VISIBLE;
 
 typedef struct {
     int map_x;
@@ -36,6 +38,14 @@ typedef struct {
     SDL_Texture *map_image;
 } MAPCHIP;
 
+typedef struct {
+    int rectangle_x;
+    int rectangle_y;
+    int rectangle_w;
+    int rectangle_h;
+    int blend;
+    VISIBLE visible;
+} WINDOW;
 
 int clac_offset(int, int, int *, int *);
 int load_image(SDL_Renderer *, SDL_Texture **, char *);
@@ -55,5 +65,11 @@ int load_map(char *);
 int draw_map(SDL_Renderer *);
 int is_movable(int, int);
 int fade_out(SDL_Renderer *);
+
+int make_window(SDL_Renderer *, WINDOW);
+int window_engine(SDL_Renderer *, WINDOW);
+int window_update(SDL_Renderer *, TTF_Font *, SDL_Event);
+int display_character_string(SDL_Renderer *, TTF_Font *, char *, int, int);
+int get_character_message(SDL_Event, char **);
 
 #endif

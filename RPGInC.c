@@ -3,7 +3,10 @@
 #include <time.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
 #include "RPGInC.h"
+
+#define FONT_PATH "font/PixelMplus12-Regular.ttf"
 
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
@@ -11,6 +14,7 @@ const int IMAGE_WIDTH = 16;
 const int IMAGE_HEIGHT = 16;
 const int MAGNIFICATION = 2;
 const int GRID_SIZE = 32;
+const int FONT_SIZE = 16;
 int ROW = 15;
 int COL = 20;
 int OUT_OF_MAP = 0;
@@ -29,11 +33,14 @@ MAPCHIP mapchip[256] = {0};
 
 int *map_array;
 
+WINDOW message_window = {140, 334, 360, 140, 255, OUT_VISIBLE};
+
 
 int main (int argc, char *argv[]) {
 
     SDL_Window *window = NULL;
     SDL_Renderer *renderer = NULL;
+    TTF_Font *font = NULL;
 
     //Initialize SDL
     if( SDL_Init( SDL_INIT_VIDEO ) < 0 ) {
@@ -47,6 +54,16 @@ int main (int argc, char *argv[]) {
         return 1;
     } else {
         renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    }
+
+    //Initialize TTF
+    if ( TTF_Init() < 0 ) {
+        printf("TTFcould not initialize! TTF_Error: %s\n", TTF_GetError());
+    }
+
+    font = TTF_OpenFont(FONT_PATH, FONT_SIZE);
+    if ( font == NULL ) {
+        printf("TTF_OpenFont: %s\n", TTF_GetError());
     }
 
     load_mapchip(renderer);
@@ -68,6 +85,9 @@ int main (int argc, char *argv[]) {
 
         player_animation(renderer);
         player_update(renderer, e);
+
+        window_update(renderer, font, e);
+
         SDL_RenderPresent(renderer);
 
         // event handling
@@ -217,6 +237,7 @@ int load_npc(SDL_Renderer *renderer) {
     DIRECTION direction;
     MOVING moving;
     int max_step;
+    int message_length;
     char message[1024] = {0};
 
     char buf[256] = {0};
@@ -259,6 +280,8 @@ int load_npc(SDL_Renderer *renderer) {
                 npc[element_number].npc.direction = direction;
                 npc[element_number].npc_move = moving;
 
+                message_length = strlen(message);
+                message[message_length - 1] = '\0';
                 sprintf(npc[element_number].message, "%s", message);
 
                 element_number += 1;
@@ -557,11 +580,11 @@ int is_movable(int x, int y) {
     }
 
     if ( x < 0 || x > COL - 1 || y  < 0 || y > ROW - 1) {
-        return 1;
+        return 2;
     }
 
     if (mapchip[map_array[y*COL+x]].movable == 1) {
-        return 1;
+        return 2;
     }
 
     if(player.map_x == x && player.map_y == y) {
@@ -570,7 +593,6 @@ int is_movable(int x, int y) {
 
     return 0;
 }
-
 int clac_offset(int x, int y, int *offset_x, int *offset_y) {
     *offset_x = x - (SCREEN_WIDTH / 2);
     *offset_y = y - (SCREEN_HEIGHT / 2);
@@ -578,4 +600,140 @@ int clac_offset(int x, int y, int *offset_x, int *offset_y) {
     return 0;
 }
 
+int make_window(SDL_Renderer *renderer, WINDOW window) {
 
+    int edge_size = 4;
+
+    SDL_Rect rectangle;
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+
+    rectangle.x = window.rectangle_x;
+    rectangle.y = window.rectangle_y;
+    rectangle.w = window.rectangle_w;
+    rectangle.h = window.rectangle_h;
+
+    // WHITE
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, window.blend);
+    SDL_RenderFillRect(renderer, &rectangle);
+
+    rectangle.x = window.rectangle_x + edge_size;
+    rectangle.y = window.rectangle_y + edge_size;
+    rectangle.w = window.rectangle_w - edge_size * 2;
+    rectangle.h = window.rectangle_h - edge_size * 2;
+
+    // BLACK
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, window.blend);
+    SDL_RenderFillRect(renderer, &rectangle);
+
+    return 0;
+
+}
+
+int window_engine(SDL_Renderer *renderer, WINDOW window) {
+
+    if (window.visible == OUT_VISIBLE) {
+        return 0;
+    }
+
+    make_window(renderer, window);
+
+    return 0;
+}
+
+int window_update(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
+
+    if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SPACE){
+        if (message_window.visible == OUT_VISIBLE) {
+            message_window.visible = IN_VISIBLE;
+        } else {
+            message_window.visible = OUT_VISIBLE;
+        }
+    }
+
+    window_engine(renderer, message_window);
+
+    char *message;
+    get_character_message(e, &message);
+    if (message_window.visible == IN_VISIBLE) {
+        display_character_string(renderer, font, message, 144, 338);
+    }
+
+    return 0;
+}
+
+int get_character_message(SDL_Event e, char **message) {
+
+    int i;
+
+    if (player.direction == UP) {
+        if (is_movable(player.map_x, player.map_y - 1) == 1) {
+            for(i = 0;i < number_of_npc_image;i++) {
+                if (npc[i].npc.map_x == player.map_x && npc[i].npc.map_y == player.map_y - 1) {
+                    *message = npc[i].message;
+                    break;
+                }
+            }
+        } else {
+            *message = "その方向には誰もいない";
+        }
+    } else if (player.direction == DOWN) {
+        if (is_movable(player.map_x, player.map_y + 1) == 1) {
+            for(i = 0;i < number_of_npc_image;i++) {
+                if (npc[i].npc.map_x == player.map_x && npc[i].npc.map_y == player.map_y + 1) {
+                    *message = npc[i].message;
+                    break;
+                }
+            }
+        } else {
+            *message = "その方向には誰もいない";
+        }
+    } else if (player.direction == RIGHT) {
+        if (is_movable(player.map_x + 1, player.map_y) == 1) {
+            for(i = 0;i < number_of_npc_image;i++) {
+                if (npc[i].npc.map_x == player.map_x + 1 && npc[i].npc.map_y == player.map_y) {
+                    *message = npc[i].message;
+                    break;
+                }
+            }
+        } else {
+            *message = "その方向には誰もいない";
+        }
+     } else if (player.direction == LEFT) {
+        if (is_movable(player.map_x - 1, player.map_y) == 1) {
+            for(i = 0;i < number_of_npc_image;i++) {
+                if (npc[i].npc.map_x == player.map_x - 1 && npc[i].npc.map_y == player.map_y) {
+                    *message = npc[i].message;
+                    break;
+                }
+            }
+        } else {
+            *message = "その方向には誰もいない";
+        }
+    }
+
+    return 0;
+
+}
+
+int display_character_string(SDL_Renderer *renderer, TTF_Font *font, char *string, int x, int y) {
+    SDL_Surface *surface;
+    SDL_Texture *texture;
+
+    surface = TTF_RenderUTF8_Blended(font, string, (SDL_Color){255,255,255,255});
+
+    texture = SDL_CreateTextureFromSurface(renderer, surface);
+
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+
+    int iw,ih;
+    SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
+
+    SDL_Rect txtRect=(SDL_Rect){0,0,iw,ih};
+    SDL_Rect pasteRect=(SDL_Rect){x,y,iw,ih};
+
+    SDL_RenderCopy(renderer, texture, &txtRect, &pasteRect);
+
+    SDL_FreeSurface(surface);
+
+    return 0;
+}
