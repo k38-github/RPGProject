@@ -144,7 +144,7 @@ int load_image(SDL_Renderer *renderer, SDL_Texture **image_texture, char *filena
 int player_animation(SDL_Renderer *renderer) {
 
     SDL_Texture *cat_image = NULL;
-    load_image(renderer, &cat_image, "image/charachip/black_cat.bmp");
+    load_image(renderer, &cat_image, "image/charachip/chiharu.bmp");
     // load_image(renderer, &cat_image, "image/charachip/white_cat.bmp");
 
     int x = ((frame / animecycle) % 4) * 16;
@@ -190,33 +190,35 @@ int player_update(SDL_Renderer *renderer, SDL_Event e) {
 
 int player_move(SDL_Event e) {
 
-    if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_UP){
-        player.direction = UP;
-        if (is_movable(player.map_x, player.map_y - 1) == 0) {
-            player.velocity_x = 0;
-            player.velocity_y = -speed;
-            player.moving = TRUE;
-        }
-    } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_DOWN){
-        player.direction = DOWN;
-        if (is_movable(player.map_x, player.map_y + 1) == 0) {
-            player.velocity_x = 0;
-            player.velocity_y = speed;
-            player.moving = TRUE;
-        }
-    } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_RIGHT){
-        player.direction = RIGHT;
-        if (is_movable(player.map_x + 1, player.map_y) == 0) {
-            player.velocity_x = speed;
-            player.velocity_y = 0;
-            player.moving = TRUE;
-        }
-    } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_LEFT){
-        player.direction = LEFT;
-        if (is_movable(player.map_x - 1, player.map_y) == 0) {
-            player.velocity_x = -speed;
-            player.velocity_y = 0;
-            player.moving = TRUE;
+    if (message_window.visible == OUT_VISIBLE) {
+        if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_UP){
+            player.direction = UP;
+            if (is_movable(player.map_x, player.map_y - 1) == 0) {
+                player.velocity_x = 0;
+                player.velocity_y = -speed;
+                player.moving = TRUE;
+            }
+        } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_DOWN){
+            player.direction = DOWN;
+            if (is_movable(player.map_x, player.map_y + 1) == 0) {
+                player.velocity_x = 0;
+                player.velocity_y = speed;
+                player.moving = TRUE;
+            }
+        } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_RIGHT){
+            player.direction = RIGHT;
+            if (is_movable(player.map_x + 1, player.map_y) == 0) {
+                player.velocity_x = speed;
+                player.velocity_y = 0;
+                player.moving = TRUE;
+            }
+        } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_LEFT){
+            player.direction = LEFT;
+            if (is_movable(player.map_x - 1, player.map_y) == 0) {
+                player.velocity_x = -speed;
+                player.velocity_y = 0;
+                player.moving = TRUE;
+            }
         }
     }
 
@@ -346,34 +348,36 @@ int npc_update(SDL_Renderer *renderer, int element) {
 
 int npc_move(DIRECTION direction, int element) {
 
-    if (frame == 0) {
-        if (direction == UP){
-            npc[element].npc.direction = UP;
-            if (is_movable(npc[element].npc.map_x, npc[element].npc.map_y - 1) == 0) {
-                npc[element].npc.velocity_x = 0;
-                npc[element].npc.velocity_y = -speed;
-                npc[element].npc.moving = TRUE;
-            }
-        } else if (direction == DOWN){
-            npc[element].npc.direction = DOWN;
-            if (is_movable(npc[element].npc.map_x, npc[element].npc.map_y + 1) == 0) {
-                npc[element].npc.velocity_x = 0;
-                npc[element].npc.velocity_y = speed;
-                npc[element].npc.moving = TRUE;
-            }
-        } else if (direction == RIGHT){
-            npc[element].npc.direction = RIGHT;
-            if (is_movable(npc[element].npc.map_x + 1, npc[element].npc.map_y) == 0) {
-                npc[element].npc.velocity_x = speed;
-                npc[element].npc.velocity_y = 0;
-                npc[element].npc.moving = TRUE;
-            }
-        } else if (direction == LEFT){
-            npc[element].npc.direction = LEFT;
-            if (is_movable(npc[element].npc.map_x - 1, npc[element].npc.map_y) == 0) {
-                npc[element].npc.velocity_x = -speed;
-                npc[element].npc.velocity_y = 0;
-                npc[element].npc.moving = TRUE;
+    if (message_window.visible == OUT_VISIBLE) {
+        if (frame == 0) {
+            if (direction == UP){
+                npc[element].npc.direction = UP;
+                if (is_movable(npc[element].npc.map_x, npc[element].npc.map_y - 1) == 0) {
+                    npc[element].npc.velocity_x = 0;
+                    npc[element].npc.velocity_y = -speed;
+                    npc[element].npc.moving = TRUE;
+                }
+            } else if (direction == DOWN){
+                npc[element].npc.direction = DOWN;
+                if (is_movable(npc[element].npc.map_x, npc[element].npc.map_y + 1) == 0) {
+                    npc[element].npc.velocity_x = 0;
+                    npc[element].npc.velocity_y = speed;
+                    npc[element].npc.moving = TRUE;
+                }
+            } else if (direction == RIGHT){
+                npc[element].npc.direction = RIGHT;
+                if (is_movable(npc[element].npc.map_x + 1, npc[element].npc.map_y) == 0) {
+                    npc[element].npc.velocity_x = speed;
+                    npc[element].npc.velocity_y = 0;
+                    npc[element].npc.moving = TRUE;
+                }
+            } else if (direction == LEFT){
+                npc[element].npc.direction = LEFT;
+                if (is_movable(npc[element].npc.map_x - 1, npc[element].npc.map_y) == 0) {
+                    npc[element].npc.velocity_x = -speed;
+                    npc[element].npc.velocity_y = 0;
+                    npc[element].npc.moving = TRUE;
+                }
             }
         }
     }
@@ -593,6 +597,7 @@ int is_movable(int x, int y) {
 
     return 0;
 }
+
 int clac_offset(int x, int y, int *offset_x, int *offset_y) {
     *offset_x = x - (SCREEN_WIDTH / 2);
     *offset_y = y - (SCREEN_HEIGHT / 2);
@@ -653,8 +658,8 @@ int window_update(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
     window_engine(renderer, message_window);
 
     char *message;
-    get_character_message(e, &message);
     if (message_window.visible == IN_VISIBLE) {
+        get_character_message(e, &message);
         display_character_string(renderer, font, message, 144, 338);
     }
 
@@ -664,50 +669,44 @@ int window_update(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
 int get_character_message(SDL_Event e, char **message) {
 
     int i;
+    *message = "そっちには　だれも　いないよ！";
 
     if (player.direction == UP) {
         if (is_movable(player.map_x, player.map_y - 1) == 1) {
             for(i = 0;i < number_of_npc_image;i++) {
                 if (npc[i].npc.map_x == player.map_x && npc[i].npc.map_y == player.map_y - 1) {
+                    npc[i].npc.direction = DOWN;
                     *message = npc[i].message;
                     break;
                 }
             }
-        } else {
-            *message = "その方向には誰もいない";
-        }
-    } else if (player.direction == DOWN) {
+        }    } else if (player.direction == DOWN) {
         if (is_movable(player.map_x, player.map_y + 1) == 1) {
             for(i = 0;i < number_of_npc_image;i++) {
                 if (npc[i].npc.map_x == player.map_x && npc[i].npc.map_y == player.map_y + 1) {
+                    npc[i].npc.direction = UP;
                     *message = npc[i].message;
                     break;
                 }
             }
-        } else {
-            *message = "その方向には誰もいない";
-        }
-    } else if (player.direction == RIGHT) {
+        }    } else if (player.direction == RIGHT) {
         if (is_movable(player.map_x + 1, player.map_y) == 1) {
             for(i = 0;i < number_of_npc_image;i++) {
                 if (npc[i].npc.map_x == player.map_x + 1 && npc[i].npc.map_y == player.map_y) {
+                    npc[i].npc.direction = LEFT;
                     *message = npc[i].message;
                     break;
                 }
             }
-        } else {
-            *message = "その方向には誰もいない";
-        }
-     } else if (player.direction == LEFT) {
+        }     } else if (player.direction == LEFT) {
         if (is_movable(player.map_x - 1, player.map_y) == 1) {
             for(i = 0;i < number_of_npc_image;i++) {
                 if (npc[i].npc.map_x == player.map_x - 1 && npc[i].npc.map_y == player.map_y) {
+                    npc[i].npc.direction = RIGHT;
                     *message = npc[i].message;
                     break;
                 }
             }
-        } else {
-            *message = "その方向には誰もいない";
         }
     }
 
