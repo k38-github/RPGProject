@@ -9,6 +9,7 @@
 typedef enum {DOWN, LEFT, RIGHT, UP} DIRECTION;
 typedef enum {FALSE, TRUE} MOVING;
 typedef enum {OUT_VISIBLE, IN_VISIBLE} VISIBLE;
+typedef enum {OFF, ON} STATE;
 
 typedef struct {
     int map_x;
@@ -67,9 +68,11 @@ int is_movable(int, int);
 int fade_out(SDL_Renderer *);
 
 int make_window(SDL_Renderer *, WINDOW);
-int window_engine(SDL_Renderer *, WINDOW);
 int window_update(SDL_Renderer *, TTF_Font *, SDL_Event);
+int window_engine(SDL_Renderer *, WINDOW);
+int message_engine(SDL_Renderer *, TTF_Font *, SDL_Event);
 int display_character_string(SDL_Renderer *, TTF_Font *, char *, int, int);
 int get_character_message(SDL_Event, char **);
 
+int u8mb(const char);
 #endif

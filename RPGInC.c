@@ -35,6 +35,9 @@ int *map_array;
 
 WINDOW message_window = {140, 334, 360, 140, 255, OUT_VISIBLE};
 
+char *message;
+STATE state = OFF;
+
 
 int main (int argc, char *argv[]) {
 
@@ -636,16 +639,13 @@ int make_window(SDL_Renderer *renderer, WINDOW window) {
 
 int window_engine(SDL_Renderer *renderer, WINDOW window) {
 
-    if (window.visible == OUT_VISIBLE) {
-        return 0;
-    }
-
     make_window(renderer, window);
 
     return 0;
 }
 
 int window_update(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
+
 
     if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SPACE){
         if (message_window.visible == OUT_VISIBLE) {
@@ -655,12 +655,72 @@ int window_update(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
         }
     }
 
-    window_engine(renderer, message_window);
-
-    char *message;
     if (message_window.visible == IN_VISIBLE) {
+        window_engine(renderer, message_window);
+        message_engine(renderer, font, e);
+    }
+
+    return 0;
+}
+
+int message_engine(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
+
+    int x;
+    int message_length;
+    int remaining_message_length;
+    int word_length = 0;
+    int byte_counter;
+    int byt;
+
+    char message_tmp[1024];
+    char word[6];
+
+    if (state == OFF) {
         get_character_message(e, &message);
-        display_character_string(renderer, font, message, 144, 338);
+        state = ON;
+    } else {
+        strcpy(message_tmp, message);
+        message_length = strlen(message);
+
+        while (*message != '\0') {
+            byt = u8mb(*message);
+            message += u8mb(*message);
+
+            remaining_message_length = strlen(message);
+
+            memset(word, '\0', 6);
+
+            byte_counter = 0;
+            for (x=word_length;x<message_length - remaining_message_length;x++) {
+                sprintf(&word[byte_counter], "%c", message_tmp[x]);
+                byte_counter++;
+            }
+
+            SDL_Delay(120);
+            display_character_string(renderer, font, word, 155 + word_length * 6 , 354);
+
+            word_length = message_length - remaining_message_length;
+
+            if ( SDL_PollEvent(&e) ) {
+                if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SPACE){
+                    message_window.visible = OUT_VISIBLE;
+                    break;
+                }
+            }
+        }
+
+        if (message_window.visible == IN_VISIBLE) {
+            while (1) {
+                if ( SDL_PollEvent(&e) ) {
+                    if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SPACE){
+                        message_window.visible = OUT_VISIBLE;
+                        break;
+                    }
+                }
+            }
+        }
+
+        state = OFF;
     }
 
     return 0;
@@ -718,6 +778,7 @@ int display_character_string(SDL_Renderer *renderer, TTF_Font *font, char *strin
     SDL_Surface *surface;
     SDL_Texture *texture;
 
+
     surface = TTF_RenderUTF8_Blended(font, string, (SDL_Color){255,255,255,255});
 
     texture = SDL_CreateTextureFromSurface(renderer, surface);
@@ -731,8 +792,28 @@ int display_character_string(SDL_Renderer *renderer, TTF_Font *font, char *strin
     SDL_Rect pasteRect=(SDL_Rect){x,y,iw,ih};
 
     SDL_RenderCopy(renderer, texture, &txtRect, &pasteRect);
+    SDL_RenderPresent(renderer);
 
     SDL_FreeSurface(surface);
 
     return 0;
+}
+
+// UTF-8文字の1バイト目を判定して文字のバイト数を返す関数
+int u8mb(const char chr)
+{
+    int byt = 1;
+    if ((chr & 0x80) == 0x00) { //1byte文字は何もしない（[byt = 1]のまま）
+    } else if ((chr & 0xE0) == 0xC0) { //2byte文字
+        byt = 2;
+    } else if ((chr & 0xF0) == 0xE0) { //3byte文字
+        byt = 3;
+    } else if ((chr & 0xF8) == 0xF0) { //4byte文字
+        byt = 4;
+    } else if ((chr & 0xFC) == 0xF8) { //5byte文字
+        byt = 5;
+    } else if ((chr & 0xFE) == 0xFC) { //6byte文字
+        byt = 6;
+    }
+    return byt;
 }
