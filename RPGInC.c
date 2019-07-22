@@ -608,6 +608,24 @@ int clac_offset(int x, int y, int *offset_x, int *offset_y) {
     return 0;
 }
 
+int make_box(SDL_Renderer *renderer, int x, int y, int w, int h, int blend, int r, int g, int b) {
+
+    SDL_Rect rectangle;
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+
+    rectangle.x = x;
+    rectangle.y = y;
+    rectangle.w = w;
+    rectangle.h = h;
+
+    SDL_SetRenderDrawColor(renderer, r, g, b, blend);
+
+    SDL_RenderFillRect(renderer, &rectangle);
+    SDL_RenderPresent(renderer);
+
+    return 0;
+}
+
 int make_window(SDL_Renderer *renderer, WINDOW window) {
 
     int edge_size = 4;
@@ -697,13 +715,13 @@ int message_engine(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
             }
 
             SDL_Delay(120);
-            display_character_string(renderer, font, word, 155 + word_length * 6 , 354);
+            display_character_string(renderer, font, word, 155 + word_length * 5 , 354);
 
             word_length = message_length - remaining_message_length;
 
             if ( SDL_PollEvent(&e) ) {
                 if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SPACE){
-                    message_window.visible = OUT_VISIBLE;
+                    display_character_string(renderer, font, message, 155 + word_length * 5 , 354);
                     break;
                 }
             }
@@ -711,6 +729,16 @@ int message_engine(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
 
         if (message_window.visible == IN_VISIBLE) {
             while (1) {
+                SDL_Delay(400);
+
+                if (state == ON) {
+                    display_character_string(renderer, font, "▼", 310 , 442);
+                    state = OFF;
+                } else {
+                    make_box(renderer, 310, 442, 14, 22, 255, 0, 0, 0);
+                    state = ON;
+                }
+
                 if ( SDL_PollEvent(&e) ) {
                     if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SPACE){
                         message_window.visible = OUT_VISIBLE;
