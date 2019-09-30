@@ -626,6 +626,17 @@ int make_box(SDL_Renderer *renderer, int x, int y, int w, int h, int blend, int 
     return 0;
 }
 
+int make_triangle(SDL_Renderer *renderer, int x1, int y1, int x2, int y2, int x3, int y3, int blend, int r, int g, int b) {
+
+    SDL_Point points[4] = {{x1, y1},{x2, y2}, {x3, y3}, {x1, y1}};
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(renderer, r, g, b, blend);
+    SDL_RenderDrawLines(renderer, points, 4);
+    SDL_RenderPresent(renderer);
+
+    return 0;
+}
+
 int make_window(SDL_Renderer *renderer, WINDOW window) {
 
     int edge_size = 4;
@@ -732,7 +743,7 @@ int message_engine(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
                 SDL_Delay(400);
 
                 if (state == ON) {
-                    display_character_string(renderer, font, "▼", 310 , 442);
+                    make_triangle(renderer, 310, 450, 320, 450, 315, 460, 255, 255, 255, 255);
                     state = OFF;
                 } else {
                     make_box(renderer, 310, 442, 14, 22, 255, 0, 0, 0);

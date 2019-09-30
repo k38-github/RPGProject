@@ -69,6 +69,7 @@ int fade_out(SDL_Renderer *);
 
 int make_window(SDL_Renderer *, WINDOW);
 int make_box(SDL_Renderer *, int, int, int, int, int, int, int, int);
+int make_triangle(SDL_Renderer *, int, int, int, int, int, int, int, int, int, int);
 int window_update(SDL_Renderer *, TTF_Font *, SDL_Event);
 int window_engine(SDL_Renderer *, WINDOW);
 int message_engine(SDL_Renderer *, TTF_Font *, SDL_Event);
