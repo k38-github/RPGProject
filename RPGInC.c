@@ -245,7 +245,7 @@ int load_npc(SDL_Renderer *renderer) {
     int message_length;
     char message[1024] = {0};
 
-    char buf[256] = {0};
+    char buf[1024] = {0};
     char npc_path[256] = {0};
     int i = 0;
     int element_number = 0;
@@ -701,6 +701,14 @@ int message_engine(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
     int byte_counter;
     int byt;
 
+    int loop_counter = 0;
+    int row_position = 0;
+    int col_position = 0;
+    int tmp_position = 0;
+
+    const int row_size = 22;
+    const int col_size = 88;
+
     char message_tmp[1024];
     char word[6];
 
@@ -726,16 +734,49 @@ int message_engine(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
             }
 
             SDL_Delay(120);
-            display_character_string(renderer, font, word, 155 + word_length * 5 , 354);
+            if (loop_counter != 0 && loop_counter % row_size == 0) {
+                row_position += row_size;
+                col_position = 0;
+                tmp_position = word_length;
+                if (loop_counter % col_size == 0 ) {
+                    while (1) {
+                        SDL_Delay(400);
+
+                        if (state == ON) {
+                            make_triangle(renderer, 310, 450, 320, 450, 315, 460, 255, 255, 255, 255);
+                            state = OFF;
+                        } else {
+                            make_box(renderer, 310, 442, 14, 22, 255, 0, 0, 0);
+                            state = ON;
+                        }
+
+                        if ( SDL_PollEvent(&e) ) {
+                            if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SPACE){
+                                break;
+                            }
+                        }
+                    }
+                    make_window(renderer, message_window);
+                    row_position = 0;
+                    col_position = 0;
+                }
+            } else if (loop_counter % row_size > 0) {
+                col_position = word_length - tmp_position;
+            }
+
+            display_character_string(renderer, font, word, 155 + col_position * 5 , 354 + row_position);
 
             word_length = message_length - remaining_message_length;
 
             if ( SDL_PollEvent(&e) ) {
                 if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SPACE){
-                    display_character_string(renderer, font, message, 155 + word_length * 5 , 354);
+                    printf("%d %s\n", loop_counter, message);
+                    display_character_string(renderer, font, message, 155 + (col_position + byt) * 5 , 354 + row_position);
                     break;
                 }
             }
+
+            loop_counter++;
         }
 
         if (message_window.visible == IN_VISIBLE) {
