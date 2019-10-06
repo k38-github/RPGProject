@@ -711,6 +711,7 @@ int message_engine(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
 
     char message_tmp[1024];
     char word[6];
+    char isspace[3] = {0};
 
     if (state == OFF) {
         get_character_message(e, &message);
@@ -720,6 +721,8 @@ int message_engine(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
         message_length = strlen(message);
 
         while (*message != '\0') {
+            SDL_Delay(120);
+
             byt = u8mb(*message);
             message += u8mb(*message);
 
@@ -733,22 +736,28 @@ int message_engine(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
                 byte_counter++;
             }
 
-            SDL_Delay(120);
+            // 改行判定(半角スペースが2つ続いたら改行とみなす)
+            if (*word == ' ') {
+                if (strcmp(isspace, "  ") == 0) {
+                    memset(isspace, '\0', 3);
+                }
+                strncat(isspace, word, 1);
+            } else {
+                memset(isspace, '\0', 3);
+            }
+
+            if (strcmp(isspace, "  ") == 0) {
+               loop_counter = loop_counter + (row_size - (loop_counter % row_size) - 1);
+            }
+
+            // 折り返し判定
             if (loop_counter != 0 && loop_counter % row_size == 0) {
                 row_position += row_size;
                 col_position = 0;
                 tmp_position = word_length;
                 if (loop_counter % col_size == 0 ) {
                     while (1) {
-                        SDL_Delay(400);
-
-                        if (state == ON) {
-                            make_triangle(renderer, 310, 450, 320, 450, 315, 460, 255, 255, 255, 255);
-                            state = OFF;
-                        } else {
-                            make_box(renderer, 310, 442, 14, 22, 255, 0, 0, 0);
-                            state = ON;
-                        }
+                        flash_triangle(renderer);
 
                         if ( SDL_PollEvent(&e) ) {
                             if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SPACE){
@@ -781,15 +790,7 @@ int message_engine(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
 
         if (message_window.visible == IN_VISIBLE) {
             while (1) {
-                SDL_Delay(400);
-
-                if (state == ON) {
-                    make_triangle(renderer, 310, 450, 320, 450, 315, 460, 255, 255, 255, 255);
-                    state = OFF;
-                } else {
-                    make_box(renderer, 310, 442, 14, 22, 255, 0, 0, 0);
-                    state = ON;
-                }
+                flash_triangle(renderer);
 
                 if ( SDL_PollEvent(&e) ) {
                     if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SPACE){
@@ -896,4 +897,18 @@ int u8mb(const char chr)
         byt = 6;
     }
     return byt;
+}
+
+int flash_triangle(SDL_Renderer *renderer) {
+    SDL_Delay(400);
+
+    if (state == ON) {
+        make_triangle(renderer, 310, 450, 320, 450, 315, 460, 255, 255, 255, 255);
+        state = OFF;
+    } else {
+        make_box(renderer, 310, 442, 14, 22, 255, 0, 0, 0);
+        state = ON;
+    }
+
+    return 0;
 }

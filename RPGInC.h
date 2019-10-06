@@ -77,4 +77,5 @@ int display_character_string(SDL_Renderer *, TTF_Font *, char *, int, int);
 int get_character_message(SDL_Event, char **);
 
 int u8mb(const char);
+int flash_triangle(SDL_Renderer *);
 #endif
