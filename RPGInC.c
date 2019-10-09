@@ -712,6 +712,7 @@ int message_engine(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
     char message_tmp[1024];
     char word[6];
     char isspace[3] = {0};
+    char isasterisk[3] = {0};
 
     if (state == OFF) {
         get_character_message(e, &message);
@@ -748,6 +749,21 @@ int message_engine(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
 
             if (strcmp(isspace, "  ") == 0) {
                loop_counter = loop_counter + (row_size - (loop_counter % row_size) - 1);
+            }
+
+            // 改ページ判定(アスタリスクが2つ続いたら改ページとみなす)
+            if (*word == '*') {
+                if (strcmp(isasterisk, "**") == 0) {
+                    memset(isasterisk, '\0', 3);
+                }
+                strncat(isasterisk, word, 1);
+                strncpy(word, " ", 1);
+            } else {
+                memset(isasterisk, '\0', 3);
+            }
+
+            if (strcmp(isasterisk, "**") == 0) {
+                loop_counter = loop_counter + (col_size - (loop_counter % col_size) - 1);
             }
 
             // 折り返し判定
