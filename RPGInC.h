@@ -73,7 +73,7 @@ int make_triangle(SDL_Renderer *, int, int, int, int, int, int, int, int, int, i
 int window_update(SDL_Renderer *, TTF_Font *, SDL_Event);
 int window_engine(SDL_Renderer *, WINDOW);
 int message_engine(SDL_Renderer *, TTF_Font *, SDL_Event);
-int display_character_string(SDL_Renderer *, TTF_Font *, char *, int, int);
+int display_character_string(SDL_Renderer *, TTF_Font *, char *, double, double);
 int get_character_message(SDL_Event, char **);
 
 int u8mb(const char);
