@@ -752,7 +752,9 @@ int message_engine(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
             }
 
             if (strcmp(isspace, "  ") == 0) {
-               loop_counter = loop_counter + (row_size - (loop_counter % row_size) - 1);
+                if (loop_counter % col_size != 0) {
+                    loop_counter = loop_counter + (row_size - (loop_counter % row_size) - 1);
+                }
             }
 
             // 改ページ判定(アスタリスクが2つ続いたら改ページとみなす)
@@ -829,7 +831,9 @@ int message_engine(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
                         }
 
                         if (strcmp(isspace, "  ") == 0) {
-                           loop_counter = loop_counter + (row_size - (loop_counter % row_size) - 1);
+                            if (loop_counter % col_size != 0) {
+                                loop_counter = loop_counter + (row_size - (loop_counter % row_size) - 1);
+                            }
                         }
 
                         // 改ページ判定(アスタリスクが2つ続いたら改ページとみなす)
