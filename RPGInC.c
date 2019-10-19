@@ -4,6 +4,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_mixer.h>
 #include "RPGInC.h"
 
 #define FONT_PATH "font/PixelMplus12-Regular.ttf"
@@ -38,6 +39,7 @@ WINDOW message_window = {140, 334, 360, 140, 255, OUT_VISIBLE};
 char *message;
 STATE state = OFF;
 
+Mix_Music *music = NULL;
 
 int main (int argc, char *argv[]) {
 
@@ -45,7 +47,7 @@ int main (int argc, char *argv[]) {
     SDL_Renderer *renderer = NULL;
     TTF_Font *font = NULL;
 
-    //Initialize SDL
+    // Initialize SDL
     if( SDL_Init( SDL_INIT_VIDEO ) < 0 ) {
         printf( "SDL could not initialize! SDL_Error: %s\n", SDL_GetError() );
         return 1;
@@ -59,20 +61,44 @@ int main (int argc, char *argv[]) {
         renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     }
 
-    //Initialize TTF
+    load_mapchip(renderer);
+    load_map("data/field.map");
+
+    load_npc(renderer);
+    //
+
+    // Initialize TTF
     if ( TTF_Init() < 0 ) {
-        printf("TTFcould not initialize! TTF_Error: %s\n", TTF_GetError());
+        printf("TTF could not initialize! TTF_Error: %s\n", TTF_GetError());
     }
 
     font = TTF_OpenFont(FONT_PATH, FONT_SIZE);
     if ( font == NULL ) {
         printf("TTF_OpenFont: %s\n", TTF_GetError());
     }
+    //
 
-    load_mapchip(renderer);
-    load_map("data/field.map");
+    // Initialize Mixer
+    if (SDL_Init(SDL_INIT_AUDIO) < 0) {
+        printf( "Mixer could not initialize! Mixer_Error: %s\n", Mix_GetError());
+        return 1;
+    }
+    if( Mix_OpenAudio( 22050, MIX_DEFAULT_FORMAT, 2, 4096 ) == -1 ) {
+        printf( "Mix_OpenAudio could not initialize! Mixer_Error: %s\n", Mix_GetError());
+        return 1;
+    }
 
-    load_npc(renderer);
+    music = Mix_LoadMUS("music/bgm/village02.ogg");
+    if (music == NULL) {
+        return 1;
+    }
+    if (Mix_PlayMusic(music, -1) == -1) {
+        return 1;
+    }
+
+    Mix_VolumeMusic(10);
+    Mix_PlayingMusic();
+    //
 
     // main loop
     while (1) {
@@ -118,6 +144,10 @@ int main (int argc, char *argv[]) {
     }
 
     SDL_Quit();
+
+    // quit SDL_mixer
+    Mix_FreeMusic(music);
+    Mix_CloseAudio();
 
     return 0;
 
@@ -450,10 +480,15 @@ int load_move(SDL_Renderer *renderer) {
 
                 if (player.map_x == event_point_x && player.map_y == event_point_y) {
                     if (player.direction == direction_of_penetration) {
+
+                        load_se();
+
                         sprintf(MAP_EVENT_NAME, "%s", new_map_name);
 
                         sprintf(map_path, "data/%s.map", new_map_name);
                         load_map(map_path);
+
+                        load_bgm();
 
                         player.map_x = new_x;
                         player.map_y = new_y;
@@ -520,6 +555,127 @@ int fade_out(SDL_Renderer *renderer) {
 
 }
 
+int load_se(void) {
+    char event_path[256] = {0};
+
+    sprintf(event_path, "data/%s.evt", MAP_EVENT_NAME);
+
+    FILE *fp;
+    char buf[256] = {0};
+    char event[256] = {0};
+    int event_point_x;
+    int event_point_y;
+    char se_name[256] = {0};
+    char se_path[256] = {0};
+
+    int i = 0;
+
+    Mix_Chunk *wave = NULL;
+
+    fp = fopen(event_path, "r");
+    if (fp == NULL) {
+        printf("file open error. %d\n", __LINE__);
+        return 1;
+    }
+
+    for(i = 0;fgets(buf, sizeof(buf), fp) != NULL;i++) {
+
+        if (strncmp(buf, "#", 1) != 0){
+            if (strncmp(buf, "SE", 2) == 0) {
+                sscanf(buf,
+                   "%[^,],%d,%d,%[^,]",
+                       event, &event_point_x, &event_point_y, &se_name);
+
+                if (player.map_x == event_point_x && player.map_y == event_point_y) {
+                    sprintf(se_path, "music/se/%s", se_name);
+
+                    wave = Mix_LoadWAV(se_path);
+                    if (wave == NULL) {
+                        return 1;
+                    }
+
+                    Mix_VolumeChunk(wave, 10);
+                    if ( Mix_PlayChannel(-1, wave, 0) == -1 ) {
+                        return 1;
+                    }
+
+                    break;
+                }
+            }
+        }
+    }
+
+    fclose(fp);
+
+    return 0;
+}
+
+int sound_se(char *se_name) {
+
+    Mix_Chunk *wave = NULL;
+    char se_path[256] = {0};
+
+    sprintf(se_path, "music/se/%s", se_name);
+
+    wave = Mix_LoadWAV(se_path);
+    if (wave == NULL) {
+        return 1;
+    }
+
+    Mix_VolumeChunk(wave, 10);
+    if ( Mix_PlayChannel(-1, wave, 0) == -1 ) {
+        return 1;
+    }
+
+    return 0;
+}
+
+int load_bgm(void) {
+    char event_path[256] = {0};
+
+    sprintf(event_path, "data/%s.evt", MAP_EVENT_NAME);
+
+    FILE *fp;
+    char buf[256] = {0};
+    char event[256] = {0};
+    char bgm_name[256] = {0};
+    char bgm_path[256] = {0};
+
+    int i = 0;
+
+    fp = fopen(event_path, "r");
+    if (fp == NULL) {
+        printf("file open error. %d\n", __LINE__);
+        return 1;
+    }
+
+    for(i = 0;fgets(buf, sizeof(buf), fp) != NULL;i++) {
+
+        if (strncmp(buf, "#", 1) != 0){
+            if (strncmp(buf, "BGM", 3) == 0) {
+                sscanf(buf,
+                   "%[^,],%[^,]",
+                       event, &bgm_name);
+
+                sprintf(bgm_path, "music/bgm/%s", bgm_name);
+
+                music = Mix_LoadMUS(bgm_path);
+                if (music == NULL) {
+                    return 1;
+                }
+                if (Mix_PlayMusic(music, -1) == -1) {
+                    return 1;
+                }
+
+                break;
+            }
+        }
+    }
+
+    fclose(fp);
+
+    return 0;
+}
 int load_map(char *map_name) {
     FILE *fp;
     int i = 0;
@@ -722,11 +878,13 @@ int message_engine(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
         get_character_message(e, &message);
         state = ON;
     } else {
+        sound_se("conversation.ogg");
+
         strcpy(message_tmp, message);
         message_length = strlen(message);
 
         while (*message != '\0') {
-            SDL_Delay(120);
+            SDL_Delay(60);
 
             byt = u8mb(*message);
             message += u8mb(*message);
@@ -783,6 +941,7 @@ int message_engine(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
 
                         if ( SDL_PollEvent(&e) ) {
                             if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SPACE){
+                                sound_se("conversation.ogg");
                                 break;
                             }
                         }
@@ -790,6 +949,8 @@ int message_engine(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
                     make_window(renderer, message_window);
                     row_position = 0;
                     col_position = 0;
+                } else {
+                    sound_se("conversation.ogg");
                 }
             } else if (loop_counter % row_size > 0) {
                 col_position = word_length - tmp_position;

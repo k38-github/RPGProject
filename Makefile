@@ -1,7 +1,7 @@
 all: RPGInC
 
 RPGInC:
-	gcc -g -o RPGInC RPGInC.c RPGInC.h `sdl2-config --cflags --libs` -lSDL2_image -lSDL2_ttf
+	gcc -g -o RPGInC RPGInC.c RPGInC.h `sdl2-config --cflags --libs` -lSDL2_image -lSDL2_ttf -lSDL2_mixer
 
 run:
 	./RPGInC
