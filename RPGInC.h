@@ -50,8 +50,8 @@ typedef struct {
 
 int clac_offset(int, int, int *, int *);
 int load_image(SDL_Renderer *, SDL_Texture **, char *);
-int player_animation(SDL_Renderer *);
-int player_update(SDL_Renderer *, SDL_Event);
+int player_animation(SDL_Renderer *, SDL_Texture *);
+int player_update(SDL_Renderer *, SDL_Event, SDL_Texture *);
 int player_move(SDL_Event);
 
 int load_npc(SDL_Renderer *);
@@ -61,14 +61,14 @@ int npc_move(DIRECTION, int);
 
 int load_map_image(SDL_Renderer *, SDL_Texture **);
 int load_mapchip(SDL_Renderer *);
-int load_move(SDL_Renderer *);
+int load_move(SDL_Renderer *, SDL_Texture *);
 int load_se(void);
 int load_bgm(void);
 int sound_se(char *);
 int load_map(char *);
 int draw_map(SDL_Renderer *);
 int is_movable(int, int);
-int fade_out(SDL_Renderer *);
+int fade_out(SDL_Renderer *, SDL_Texture *);
 
 int make_window(SDL_Renderer *, WINDOW);
 int make_box(SDL_Renderer *, int, int, int, int, int, int, int, int);

@@ -58,11 +58,14 @@ int main (int argc, char *argv[]) {
         printf( "Window could not be created! SDL_Error: %s\n", SDL_GetError() );
         return 1;
     } else {
-        renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+        renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE);
     }
 
     load_mapchip(renderer);
     load_map("data/field.map");
+
+    SDL_Texture *player_image = NULL;
+    load_image(renderer, &player_image, "image/charachip/chiharu.bmp");
 
     load_npc(renderer);
     //
@@ -88,7 +91,7 @@ int main (int argc, char *argv[]) {
         return 1;
     }
 
-    music = Mix_LoadMUS("music/bgm/village02.ogg");
+    music = Mix_LoadMUS("music/bgm/filed.ogg");
     if (music == NULL) {
         return 1;
     }
@@ -112,8 +115,8 @@ int main (int argc, char *argv[]) {
 
         npc_animation(renderer);
 
-        player_animation(renderer);
-        player_update(renderer, e);
+        player_animation(renderer, player_image);
+        player_update(renderer, e, player_image);
 
         window_update(renderer, font, e);
 
@@ -143,6 +146,7 @@ int main (int argc, char *argv[]) {
         SDL_DestroyTexture(npc[i].npc_image);
     }
 
+    SDL_DestroyTexture(player_image);
     SDL_Quit();
 
     // quit SDL_mixer
@@ -174,11 +178,7 @@ int load_image(SDL_Renderer *renderer, SDL_Texture **image_texture, char *filena
     return 0;
 }
 
-int player_animation(SDL_Renderer *renderer) {
-
-    SDL_Texture *cat_image = NULL;
-    load_image(renderer, &cat_image, "image/charachip/chiharu.bmp");
-    // load_image(renderer, &cat_image, "image/charachip/white_cat.bmp");
+int player_animation(SDL_Renderer *renderer, SDL_Texture *player_image) {
 
     int x = ((frame / animecycle) % 4) * 16;
     int y = player.direction * IMAGE_HEIGHT;
@@ -187,7 +187,7 @@ int player_animation(SDL_Renderer *renderer) {
     SDL_Rect drawRect=(SDL_Rect){player.pixel_x - player.offset_x, player.pixel_y - player.offset_y,
                                  IMAGE_WIDTH*MAGNIFICATION, IMAGE_HEIGHT*MAGNIFICATION};
 
-    SDL_RenderCopy(renderer, cat_image, &imageRect, &drawRect);
+    SDL_RenderCopy(renderer, player_image, &imageRect, &drawRect);
 
     if (frame <= animecycle * 4) {
         frame += 1;
@@ -195,12 +195,10 @@ int player_animation(SDL_Renderer *renderer) {
         frame = 0;
     }
 
-    SDL_DestroyTexture(cat_image);
-
     return 0;
 }
 
-int player_update(SDL_Renderer *renderer, SDL_Event e) {
+int player_update(SDL_Renderer *renderer, SDL_Event e, SDL_Texture *player_image) {
 
     if (player.moving == TRUE) {
         player.pixel_x = player.pixel_x + player.velocity_x;
@@ -211,7 +209,7 @@ int player_update(SDL_Renderer *renderer, SDL_Event e) {
             player.map_x = player.pixel_x / GRID_SIZE;
             player.map_y = player.pixel_y / GRID_SIZE;
 
-            load_move(renderer);
+            load_move(renderer, player_image);
             player_move(e);
         }
 
@@ -294,7 +292,6 @@ int load_npc(SDL_Renderer *renderer) {
         npc[i].npc.direction = 0;
         npc[i].npc.moving = 0;
         SDL_DestroyTexture(npc[i].npc_image);
-        sprintf(npc[i].message, "%s", '\0');
     }
 
     for(i = 0;fgets(buf, sizeof(buf), fp) != NULL;i++) {
@@ -302,7 +299,7 @@ int load_npc(SDL_Renderer *renderer) {
         if (strncmp(buf, "#", 1) != 0){
             if (strncmp(buf, "CHARA", 5) == 0) {
                 sscanf(buf,
-                   "%[^,],%[^,],%d,%d,%d,%d,%[^,]",
+                   "%[^,],%[^,],%d,%d,%u,%u,%[^,]",
                        event, npc_name, &map_x, &map_y, &direction, &moving, message);
 
                 sprintf(npc_path, "image/charachip/%s.bmp", npc_name);
@@ -339,7 +336,7 @@ int npc_animation(SDL_Renderer *renderer) {
         int x = ((frame / animecycle) % 4) * 16;
         int y = npc[i].npc.direction * IMAGE_HEIGHT;
 
-        SDL_Rect imageRect=(SDL_Rect){x/4, y/4, IMAGE_WIDTH/4, IMAGE_HEIGHT/4};
+        SDL_Rect imageRect=(SDL_Rect){x, y, IMAGE_WIDTH, IMAGE_HEIGHT};
         SDL_Rect drawRect=(SDL_Rect){npc[i].npc.pixel_x - player.offset_x,
                                      npc[i].npc.pixel_y - player.offset_y,
                                      IMAGE_WIDTH*MAGNIFICATION, IMAGE_HEIGHT*MAGNIFICATION};
@@ -426,10 +423,8 @@ int draw_map(SDL_Renderer *renderer){
     int start_y = player.offset_y / GRID_SIZE - 1;
     int end_y = start_y + SCREEN_HEIGHT/ GRID_SIZE + 2;
 
-
     for(y = start_y;y < end_y;y++){
         for(x = start_x; x < end_x;x++){
-
             SDL_Rect imageRect=(SDL_Rect){0, 0, IMAGE_WIDTH, IMAGE_HEIGHT};
             SDL_Rect drawRect=(SDL_Rect){(x * GRID_SIZE) - player.offset_x,
                                          (y * GRID_SIZE) - player.offset_y,
@@ -447,7 +442,7 @@ int draw_map(SDL_Renderer *renderer){
     return 0;
 }
 
-int load_move(SDL_Renderer *renderer) {
+int load_move(SDL_Renderer *renderer, SDL_Texture *player_image) {
     char event_path[256] = {0};
 
     sprintf(event_path, "data/%s.evt", MAP_EVENT_NAME);
@@ -475,7 +470,7 @@ int load_move(SDL_Renderer *renderer) {
         if (strncmp(buf, "#", 1) != 0){
             if (strncmp(buf, "MOVE", 4) == 0) {
                 sscanf(buf,
-                   "%[^,],%d,%d,%d,%[^,],%d,%d",
+                   "%[^,],%d,%d,%u,%[^,],%d,%d",
                        event, &event_point_x, &event_point_y, &direction_of_penetration, new_map_name, &new_x, &new_y);
 
                 if (player.map_x == event_point_x && player.map_y == event_point_y) {
@@ -497,7 +492,7 @@ int load_move(SDL_Renderer *renderer) {
 
                         load_npc(renderer);
 
-                        fade_out(renderer);
+                        fade_out(renderer, player_image);
 
                         break;
                     }
@@ -511,7 +506,7 @@ int load_move(SDL_Renderer *renderer) {
     return 0;
 }
 
-int fade_out(SDL_Renderer *renderer) {
+int fade_out(SDL_Renderer *renderer, SDL_Texture *player_image) {
 
     SDL_Rect rectangle;
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
@@ -540,7 +535,7 @@ int fade_out(SDL_Renderer *renderer) {
         if (inverse_flg == 1) {
             clac_offset(player.pixel_x, player.pixel_y, &player.offset_x, &player.offset_y);
             draw_map(renderer);
-            player_animation(renderer);
+            player_animation(renderer, player_image);
             SDL_Delay(20);
 
             i = i - 5;
@@ -565,7 +560,7 @@ int load_se(void) {
     char event[256] = {0};
     int event_point_x;
     int event_point_y;
-    char se_name[256] = {0};
+    char *se_name;
     char se_path[256] = {0};
 
     int i = 0;
@@ -578,13 +573,18 @@ int load_se(void) {
         return 1;
     }
 
+    if ((se_name = malloc(sizeof(char) * 256)) == NULL) {
+        printf("file open error. %d\n", __LINE__);
+        return 1;
+    }
+
     for(i = 0;fgets(buf, sizeof(buf), fp) != NULL;i++) {
 
         if (strncmp(buf, "#", 1) != 0){
             if (strncmp(buf, "SE", 2) == 0) {
                 sscanf(buf,
                    "%[^,],%d,%d,%[^,]",
-                       event, &event_point_x, &event_point_y, &se_name);
+                       event, &event_point_x, &event_point_y, se_name);
 
                 if (player.map_x == event_point_x && player.map_y == event_point_y) {
                     sprintf(se_path, "music/se/%s", se_name);
@@ -606,6 +606,7 @@ int load_se(void) {
     }
 
     fclose(fp);
+    free(se_name);
 
     return 0;
 }
@@ -638,7 +639,7 @@ int load_bgm(void) {
     FILE *fp;
     char buf[256] = {0};
     char event[256] = {0};
-    char bgm_name[256] = {0};
+    char *bgm_name;
     char bgm_path[256] = {0};
 
     int i = 0;
@@ -649,13 +650,19 @@ int load_bgm(void) {
         return 1;
     }
 
+    if ((bgm_name = malloc(sizeof(char) * 256)) == NULL) {
+        printf("file open error. %d\n", __LINE__);
+        return 1;
+    }
+
+
     for(i = 0;fgets(buf, sizeof(buf), fp) != NULL;i++) {
 
         if (strncmp(buf, "#", 1) != 0){
             if (strncmp(buf, "BGM", 3) == 0) {
                 sscanf(buf,
                    "%[^,],%[^,]",
-                       event, &bgm_name);
+                       event, bgm_name);
 
                 sprintf(bgm_path, "music/bgm/%s", bgm_name);
 
@@ -673,6 +680,7 @@ int load_bgm(void) {
     }
 
     fclose(fp);
+    free(bgm_name);
 
     return 0;
 }
@@ -703,7 +711,7 @@ int load_mapchip(SDL_Renderer *renderer) {
     FILE *fp;
     int x, y, z;
     char n[256] = {0};
-    char path[256] = {0};
+    char path[280] = {0};
     char buf[256] = {0};
     int i = 0;
 
