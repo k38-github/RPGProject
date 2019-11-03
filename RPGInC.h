@@ -48,6 +48,14 @@ typedef struct {
     VISIBLE visible;
 } WINDOW;
 
+typedef struct {
+    char map[256];
+    int map_x;
+    int map_y;
+    char item[128];
+    int status;
+} TREASURE;
+
 int clac_offset(int, int, int *, int *);
 int load_image(SDL_Renderer *, SDL_Texture **, char *);
 int player_animation(SDL_Renderer *, SDL_Texture *);
@@ -67,6 +75,8 @@ int load_bgm(void);
 int sound_se(char *);
 int load_map(char *);
 int draw_map(SDL_Renderer *);
+int load_treasure(SDL_Renderer *);
+int draw_treasure(SDL_Renderer *);
 int is_movable(int, int);
 int fade_out(SDL_Renderer *, SDL_Texture *);
 
@@ -77,7 +87,8 @@ int window_update(SDL_Renderer *, TTF_Font *, SDL_Event);
 int window_engine(SDL_Renderer *, WINDOW);
 int message_engine(SDL_Renderer *, TTF_Font *, SDL_Event);
 int display_character_string(SDL_Renderer *, TTF_Font *, char *, double, double);
-int get_character_message(SDL_Event, char **);
+int get_message(SDL_Event, char **);
+int get_treasure_message(char **);
 
 int u8mb(const char);
 int flash_triangle(SDL_Renderer *);

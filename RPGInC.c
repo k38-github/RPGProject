@@ -30,6 +30,8 @@ int number_of_npc_image = 0;
 CARACTER player = {1, 1, 32, 32, 0, 0, 0, 0, DOWN, FALSE};
 NPC npc[256] = {0};
 
+TREASURE treasure[256] = {0};
+
 MAPCHIP mapchip[256] = {0};
 
 int *map_array;
@@ -112,6 +114,7 @@ int main (int argc, char *argv[]) {
 
         SDL_RenderClear(renderer);
         draw_map(renderer);
+        draw_treasure(renderer);
 
         npc_animation(renderer);
 
@@ -442,6 +445,28 @@ int draw_map(SDL_Renderer *renderer){
     return 0;
 }
 
+int draw_treasure(SDL_Renderer *renderer){
+
+    int i;
+
+    for(i = 0;i<sizeof(treasure)/sizeof(treasure[0]);i++){
+        if (strcmp(treasure[i].map, MAP_EVENT_NAME) == 0) {
+            SDL_Rect imageRect=(SDL_Rect){0, 0, IMAGE_WIDTH, IMAGE_HEIGHT};
+            SDL_Rect drawRect=(SDL_Rect){(treasure[i].map_x * GRID_SIZE) - player.offset_x,
+                                         (treasure[i].map_y * GRID_SIZE) - player.offset_y,
+                                         IMAGE_WIDTH*MAGNIFICATION, IMAGE_HEIGHT*MAGNIFICATION};
+
+            if (treasure[i].status == 0){
+                SDL_RenderCopy(renderer, mapchip[15].map_image, &imageRect, &drawRect);
+            } else {
+                SDL_RenderCopy(renderer, mapchip[16].map_image, &imageRect, &drawRect);
+            }
+        }
+    }
+
+    return 0;
+}
+
 int load_move(SDL_Renderer *renderer, SDL_Texture *player_image) {
     char event_path[256] = {0};
 
@@ -482,6 +507,7 @@ int load_move(SDL_Renderer *renderer, SDL_Texture *player_image) {
 
                         sprintf(map_path, "data/%s.map", new_map_name);
                         load_map(map_path);
+                        load_treasure(renderer);
 
                         load_bgm();
 
@@ -684,6 +710,56 @@ int load_bgm(void) {
 
     return 0;
 }
+
+int load_treasure(SDL_Renderer *renderer) {
+    char event_path[256] = {0};
+
+    sprintf(event_path, "data/%s.evt", MAP_EVENT_NAME);
+
+    FILE *fp;
+    char event[256] = {0};
+    int item_id;
+    int map_x;
+    int map_y;
+    char item[128] = {0};
+    int item_length;
+
+    char buf[256] = {0};
+    int i = 0;
+
+    fp = fopen(event_path, "r");
+    if (fp == NULL) {
+        printf("file open error. %d\n", __LINE__);
+        return 1;
+    }
+
+    for(i = 0;fgets(buf, sizeof(buf), fp) != NULL;i++) {
+
+        if (strncmp(buf, "#", 1) != 0){
+            if (strncmp(buf, "TREASURE", 8) == 0) {
+                sscanf(buf,
+                   "%[^,],%d,%d,%d,%[^,]",
+                       event, &item_id, &map_x, &map_y, item);
+
+                if (treasure[item_id].status != 1) {
+                    sprintf(treasure[item_id].map, "%s", MAP_EVENT_NAME);
+                    treasure[item_id].map_x = map_x;
+                    treasure[item_id].map_y = map_y;
+                    treasure[item_id].status = 0;
+
+                    item_length = strlen(item);
+                    item[item_length - 1] = '\0';
+                    sprintf(treasure[item_id].item, "%s", item);
+                }
+            }
+        }
+    }
+
+    fclose(fp);
+
+    return 0;
+}
+
 int load_map(char *map_name) {
     FILE *fp;
     int i = 0;
@@ -744,8 +820,15 @@ int load_mapchip(SDL_Renderer *renderer) {
 int is_movable(int x, int y) {
 
     int i;
-    for(i = 0;i < number_of_npc_image;i++) {
+    for (i = 0;i < number_of_npc_image;i++) {
         if (npc[i].npc.map_x == x && npc[i].npc.map_y == y) {
+            return 1;
+        }
+    }
+
+    for (i = 0;i < sizeof(treasure)/sizeof(treasure[0]);i++) {
+        if (treasure[i].map_x == x && treasure[i].map_y == y &&
+            strcmp(treasure[i].map, MAP_EVENT_NAME) == 0) {
             return 1;
         }
     }
@@ -758,7 +841,7 @@ int is_movable(int x, int y) {
         return 2;
     }
 
-    if(player.map_x == x && player.map_y == y) {
+    if (player.map_x == x && player.map_y == y) {
         return 1;
     }
 
@@ -883,7 +966,7 @@ int message_engine(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
     char isasterisk[3] = {0};
 
     if (state == OFF) {
-        get_character_message(e, &message);
+        get_message(e, &message);
         state = ON;
     } else {
         sound_se("conversation.ogg");
@@ -1077,13 +1160,44 @@ int message_engine(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
     return 0;
 }
 
-int get_character_message(SDL_Event e, char **message) {
+int get_treasure_message(char **message) {
 
     int i;
+
+    for (i = 0;i < sizeof(treasure)/sizeof(treasure[0]);i++) {
+        if ((treasure[i].map_x == player.map_x && treasure[i].map_y == player.map_y - 1 &&
+            strcmp(treasure[i].map, MAP_EVENT_NAME) == 0) ||
+            (treasure[i].map_x == player.map_x && treasure[i].map_y == player.map_y + 1 &&
+            strcmp(treasure[i].map, MAP_EVENT_NAME) == 0) ||
+            (treasure[i].map_x == player.map_x + 1 && treasure[i].map_y == player.map_y &&
+            strcmp(treasure[i].map, MAP_EVENT_NAME) == 0) ||
+            (treasure[i].map_x == player.map_x - 1 && treasure[i].map_y == player.map_y &&
+            strcmp(treasure[i].map, MAP_EVENT_NAME) == 0)
+           ) {
+
+            if (treasure[i].status == 0) {
+                *message = strncat(treasure[i].item, "を手に入れた！", 21);
+                treasure[i].status = 1;
+            } else {
+                *message = "からっぽ！";
+            }
+
+            sound_se("treasure.wav");
+        }
+    }
+
+    return 0;
+}
+
+int get_message(SDL_Event e, char **message) {
+
+    int i;
+
     *message = "そっちには　だれも　いないよ！";
 
     if (player.direction == UP) {
         if (is_movable(player.map_x, player.map_y - 1) == 1) {
+            get_treasure_message(message);
             for(i = 0;i < number_of_npc_image;i++) {
                 if (npc[i].npc.map_x == player.map_x && npc[i].npc.map_y == player.map_y - 1) {
                     npc[i].npc.direction = DOWN;
@@ -1091,8 +1205,10 @@ int get_character_message(SDL_Event e, char **message) {
                     break;
                 }
             }
-        }    } else if (player.direction == DOWN) {
+        }
+    } else if (player.direction == DOWN) {
         if (is_movable(player.map_x, player.map_y + 1) == 1) {
+            get_treasure_message(message);
             for(i = 0;i < number_of_npc_image;i++) {
                 if (npc[i].npc.map_x == player.map_x && npc[i].npc.map_y == player.map_y + 1) {
                     npc[i].npc.direction = UP;
@@ -1100,8 +1216,10 @@ int get_character_message(SDL_Event e, char **message) {
                     break;
                 }
             }
-        }    } else if (player.direction == RIGHT) {
+        }
+    } else if (player.direction == RIGHT) {
         if (is_movable(player.map_x + 1, player.map_y) == 1) {
+            get_treasure_message(message);
             for(i = 0;i < number_of_npc_image;i++) {
                 if (npc[i].npc.map_x == player.map_x + 1 && npc[i].npc.map_y == player.map_y) {
                     npc[i].npc.direction = LEFT;
@@ -1109,8 +1227,10 @@ int get_character_message(SDL_Event e, char **message) {
                     break;
                 }
             }
-        }     } else if (player.direction == LEFT) {
+        }
+    } else if (player.direction == LEFT) {
         if (is_movable(player.map_x - 1, player.map_y) == 1) {
+            get_treasure_message(message);
             for(i = 0;i < number_of_npc_image;i++) {
                 if (npc[i].npc.map_x == player.map_x - 1 && npc[i].npc.map_y == player.map_y) {
                     npc[i].npc.direction = RIGHT;
