@@ -38,7 +38,7 @@ int *map_array;
 
 WINDOW message_window = {140, 334, 360, 140, 255, OUT_VISIBLE};
 
-char *message;
+char *message = "そっちには　だれも　いないよ！";
 STATE state = OFF;
 
 Mix_Music *music = NULL;
@@ -1189,55 +1189,59 @@ int get_treasure_message(char **message) {
     return 0;
 }
 
+int get_npc_message(char **message) {
+
+    int i;
+
+    for(i = 0;i < number_of_npc_image;i++) {
+        if (npc[i].npc.map_x == player.map_x && npc[i].npc.map_y == player.map_y - 1) {
+            npc[i].npc.direction = DOWN;
+            *message = npc[i].message;
+            break;
+        }
+        if (npc[i].npc.map_x == player.map_x && npc[i].npc.map_y == player.map_y + 1) {
+            npc[i].npc.direction = UP;
+            *message = npc[i].message;
+            break;
+        }
+        if (npc[i].npc.map_x == player.map_x + 1 && npc[i].npc.map_y == player.map_y) {
+            npc[i].npc.direction = LEFT;
+            *message = npc[i].message;
+            break;
+        }
+        if (npc[i].npc.map_x == player.map_x - 1 && npc[i].npc.map_y == player.map_y) {
+            npc[i].npc.direction = RIGHT;
+            *message = npc[i].message;
+            break;
+        }
+    }
+
+    return 0;
+}
+
 int get_message(SDL_Event e, char **message) {
 
     int i;
 
-    *message = "そっちには　だれも　いないよ！";
-
     if (player.direction == UP) {
         if (is_movable(player.map_x, player.map_y - 1) == 1) {
             get_treasure_message(message);
-            for(i = 0;i < number_of_npc_image;i++) {
-                if (npc[i].npc.map_x == player.map_x && npc[i].npc.map_y == player.map_y - 1) {
-                    npc[i].npc.direction = DOWN;
-                    *message = npc[i].message;
-                    break;
-                }
-            }
+            get_npc_message(message);
         }
     } else if (player.direction == DOWN) {
         if (is_movable(player.map_x, player.map_y + 1) == 1) {
             get_treasure_message(message);
-            for(i = 0;i < number_of_npc_image;i++) {
-                if (npc[i].npc.map_x == player.map_x && npc[i].npc.map_y == player.map_y + 1) {
-                    npc[i].npc.direction = UP;
-                    *message = npc[i].message;
-                    break;
-                }
-            }
+            get_npc_message(message);
         }
     } else if (player.direction == RIGHT) {
         if (is_movable(player.map_x + 1, player.map_y) == 1) {
             get_treasure_message(message);
-            for(i = 0;i < number_of_npc_image;i++) {
-                if (npc[i].npc.map_x == player.map_x + 1 && npc[i].npc.map_y == player.map_y) {
-                    npc[i].npc.direction = LEFT;
-                    *message = npc[i].message;
-                    break;
-                }
-            }
+            get_npc_message(message);
         }
     } else if (player.direction == LEFT) {
         if (is_movable(player.map_x - 1, player.map_y) == 1) {
             get_treasure_message(message);
-            for(i = 0;i < number_of_npc_image;i++) {
-                if (npc[i].npc.map_x == player.map_x - 1 && npc[i].npc.map_y == player.map_y) {
-                    npc[i].npc.direction = RIGHT;
-                    *message = npc[i].message;
-                    break;
-                }
-            }
+            get_npc_message(message);
         }
     }
 
