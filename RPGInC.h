@@ -5,6 +5,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_mixer.h>
 
 typedef enum {DOWN, LEFT, RIGHT, UP} DIRECTION;
 typedef enum {FALSE, TRUE} MOVING;
@@ -92,4 +93,6 @@ int get_treasure_message(char **);
 
 int u8mb(const char);
 int flash_triangle(SDL_Renderer *);
+
+int draw_debug_info(SDL_Renderer *, TTF_Font *);
 #endif

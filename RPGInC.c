@@ -39,7 +39,9 @@ int *map_array;
 WINDOW message_window = {140, 334, 360, 140, 255, OUT_VISIBLE};
 
 char *message = "そっちには　だれも　いないよ！";
+
 STATE state = OFF;
+STATE debug_state = OFF;
 
 Mix_Music *music = NULL;
 
@@ -121,6 +123,10 @@ int main (int argc, char *argv[]) {
         player_animation(renderer, player_image);
         player_update(renderer, e, player_image);
 
+        if (debug_state == ON) {
+            draw_debug_info(renderer, font);
+        }
+
         window_update(renderer, font, e);
 
         SDL_RenderPresent(renderer);
@@ -129,6 +135,12 @@ int main (int argc, char *argv[]) {
         if ( SDL_PollEvent(&e) ) {
             if (e.type == SDL_QUIT){
                 break;
+            } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_d){
+                if (debug_state == OFF) {
+                    debug_state = ON;
+                } else {
+                    debug_state = OFF;
+                }
             } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE){
                 break;
             }
@@ -868,7 +880,6 @@ int make_box(SDL_Renderer *renderer, int x, int y, int w, int h, int blend, int 
     SDL_SetRenderDrawColor(renderer, r, g, b, blend);
 
     SDL_RenderFillRect(renderer, &rectangle);
-    SDL_RenderPresent(renderer);
 
     return 0;
 }
@@ -1223,6 +1234,8 @@ int get_message(SDL_Event e, char **message) {
 
     int i;
 
+    *message = "そっちには　だれも　いないよ！";
+
     if (player.direction == UP) {
         if (is_movable(player.map_x, player.map_y - 1) == 1) {
             get_treasure_message(message);
@@ -1300,9 +1313,25 @@ int flash_triangle(SDL_Renderer *renderer) {
         make_triangle(renderer, 310, 450, 320, 450, 315, 460, 255, 255, 255, 255);
         state = OFF;
     } else {
-        make_box(renderer, 310, 442, 14, 22, 255, 0, 0, 0);
+        make_triangle(renderer, 310, 450, 320, 450, 315, 460, 255, 0, 0, 0);
         state = ON;
     }
 
     return 0;
 }
+
+int draw_debug_info(SDL_Renderer *renderer, TTF_Font *font) {
+
+    char coordinate[10];
+
+    make_box(renderer, 3, 3, 104, 54, 255, 255, 255, 255);
+    make_box(renderer, 5, 5, 100, 50, 255, 0, 0, 0);
+
+    sprintf(coordinate, "%03d %03d", player.map_x, player.map_y);
+    display_character_string(renderer, font, MAP_EVENT_NAME, 10.0, 10.0);
+    display_character_string(renderer, font, coordinate, 10.0, 30.0);
+
+    return 0;
+
+}
+
