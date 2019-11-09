@@ -47,12 +47,14 @@ typedef struct {
 } MAPCHIP;
 
 int accept_character_input(SDL_Event, SDL_Renderer *, TTF_Font *, char *, int, int);
+int display_load_window(SDL_Event, SDL_Renderer *, TTF_Font *);
 int display_save_window(SDL_Event, SDL_Renderer *, TTF_Font *);
+int display_new_window(SDL_Event, SDL_Renderer *, TTF_Font *);
 int display_character_string(SDL_Renderer *, TTF_Font *, char *, int, int);
 int make_box(SDL_Renderer *, int, int, int, int, int, COLOR);
 int load_file(char *);
 int save_file(char *);
-int display_save_window(SDL_Event, SDL_Renderer *, TTF_Font *);
+int pallet_move(SDL_Event, SDL_Renderer *);
 int draw_coordinate(SDL_Renderer *, TTF_Font *);
 int draw_filename(SDL_Window *);
 int draw_outer_periphery(SDL_Renderer *, TTF_Font *);
@@ -119,7 +121,7 @@ int main (int argc, char *argv[]) {
         printf( "Window could not be created! SDL_Error: %s\n", SDL_GetError() );
         return 1;
     } else {
-        renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+        renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE);
     }
 
     //Initialize TTF
@@ -599,7 +601,7 @@ int load_mapchip(SDL_Renderer *renderer) {
     FILE *fp;
     int x, y, z;
     char n[256];
-    char path[256];
+    char path[320];
     char buf[256];
     int i = 0;
 
