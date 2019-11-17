@@ -7,49 +7,7 @@
 #include <SDL2/SDL_mixer.h>
 #include "RPGInC.h"
 
-#define FONT_PATH "font/PixelMplus12-Regular.ttf"
-
-const int SCREEN_WIDTH = 640;
-const int SCREEN_HEIGHT = 480;
-const int IMAGE_WIDTH = 16;
-const int IMAGE_HEIGHT = 16;
-const int MAGNIFICATION = 2;
-const int GRID_SIZE = 32;
-const int FONT_SIZE = 16;
-int ROW = 15;
-int COL = 20;
-int OUT_OF_MAP = 0;
-char MAP_EVENT_NAME[256] = "field";
-
-int animecycle = 24;
-int speed = 2;
-int frame = 0;
-int number_of_map_image = 0;
-int number_of_npc_image = 0;
-
-CARACTER player = {1, 1, 32, 32, 0, 0, 0, 0, DOWN, FALSE};
-NPC npc[256] = {0};
-
-TREASURE treasure[256] = {0};
-
-MAPCHIP mapchip[256] = {0};
-
-int *map_array;
-
-WINDOW message_window = {140, 334, 360, 140, 255, OUT_VISIBLE};
-
-char *message = "そっちには　だれも　いないよ！";
-
-STATE state = OFF;
-STATE debug_state = OFF;
-
-Mix_Music *music = NULL;
-
 int main (int argc, char *argv[]) {
-
-    SDL_Window *window = NULL;
-    SDL_Renderer *renderer = NULL;
-    TTF_Font *font = NULL;
 
     // Initialize SDL
     if( SDL_Init( SDL_INIT_VIDEO ) < 0 ) {
