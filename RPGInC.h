@@ -50,12 +50,16 @@ typedef struct {
 } WINDOW;
 
 typedef struct {
-    char map[256];
     int map_x;
     int map_y;
     char item[128];
     int status;
 } TREASURE;
+
+typedef struct {
+    char map[256];
+    TREASURE treasure[256];
+} TREASURE_FRAME;
 
 int clac_offset(int, int, int *, int *);
 int load_image(SDL_Renderer *, SDL_Texture **, char *);
@@ -126,7 +130,7 @@ int number_of_npc_image = 0;
 CARACTER player = {1, 1, 32, 32, 0, 0, 0, 0, DOWN, FALSE};
 NPC npc[256] = {0};
 
-TREASURE treasure[256] = {0};
+TREASURE_FRAME treasure[256] = {0};
 
 MAPCHIP mapchip[256] = {0};
 

@@ -22,14 +22,6 @@ int main (int argc, char *argv[]) {
     } else {
         renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE);
     }
-
-    load_mapchip(renderer);
-    load_map("data/field.map");
-
-    SDL_Texture *player_image = NULL;
-    load_image(renderer, &player_image, "image/charachip/chiharu.bmp");
-
-    load_npc(renderer);
     //
 
     // Initialize TTF
@@ -51,6 +43,26 @@ int main (int argc, char *argv[]) {
     if( Mix_OpenAudio( 22050, MIX_DEFAULT_FORMAT, 2, 4096 ) == -1 ) {
         printf( "Mix_OpenAudio could not initialize! Mixer_Error: %s\n", Mix_GetError());
         return 1;
+    }
+    //
+
+    // Initialize Data
+    int i, j;
+
+    load_mapchip(renderer);
+    load_map("data/field.map");
+
+    SDL_Texture *player_image = NULL;
+    load_image(renderer, &player_image, "image/charachip/chiharu.bmp");
+
+    load_npc(renderer);
+
+    for (i = 0;i < sizeof(treasure)/sizeof(treasure[0]);i++) {
+        strcpy(treasure[i].map, "empty");
+
+        for (j = 0;j < sizeof(treasure->treasure)/sizeof(treasure->treasure[0]);j++) {
+            strcpy(treasure[i].treasure[j].item, "empty");
+	}
     }
 
     music = Mix_LoadMUS("music/bgm/filed.ogg");
@@ -110,7 +122,6 @@ int main (int argc, char *argv[]) {
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
 
-    int i;
     for (i = 0;i < number_of_map_image;i++) {
         SDL_DestroyTexture(mapchip[i].map_image);
     }
@@ -417,20 +428,24 @@ int draw_map(SDL_Renderer *renderer){
 
 int draw_treasure(SDL_Renderer *renderer){
 
-    int i;
+    int i, j;
 
     for(i = 0;i<sizeof(treasure)/sizeof(treasure[0]);i++){
         if (strcmp(treasure[i].map, MAP_EVENT_NAME) == 0) {
-            SDL_Rect imageRect=(SDL_Rect){0, 0, IMAGE_WIDTH, IMAGE_HEIGHT};
-            SDL_Rect drawRect=(SDL_Rect){(treasure[i].map_x * GRID_SIZE) - player.offset_x,
-                                         (treasure[i].map_y * GRID_SIZE) - player.offset_y,
-                                         IMAGE_WIDTH*MAGNIFICATION, IMAGE_HEIGHT*MAGNIFICATION};
+            for(j = 0;j<sizeof(treasure->treasure)/sizeof(treasure->treasure[0]);j++){
+                if (strcmp(treasure[i].treasure[j].item, "empty") != 0) {
+                    SDL_Rect imageRect=(SDL_Rect){0, 0, IMAGE_WIDTH, IMAGE_HEIGHT};
+                    SDL_Rect drawRect=(SDL_Rect){(treasure[i].treasure[j].map_x * GRID_SIZE) - player.offset_x,
+                                                 (treasure[i].treasure[j].map_y * GRID_SIZE) - player.offset_y,
+                                                 IMAGE_WIDTH*MAGNIFICATION, IMAGE_HEIGHT*MAGNIFICATION};
 
-            if (treasure[i].status == 0){
-                SDL_RenderCopy(renderer, mapchip[15].map_image, &imageRect, &drawRect);
-            } else {
-                SDL_RenderCopy(renderer, mapchip[16].map_image, &imageRect, &drawRect);
-            }
+                    if (treasure[i].treasure[j].status == 0){
+                        SDL_RenderCopy(renderer, mapchip[15].map_image, &imageRect, &drawRect);
+                    } else {
+                        SDL_RenderCopy(renderer, mapchip[16].map_image, &imageRect, &drawRect);
+                    }
+		}
+	    }
         }
     }
 
@@ -695,7 +710,8 @@ int load_treasure(SDL_Renderer *renderer) {
     int item_length;
 
     char buf[256] = {0};
-    int i = 0;
+    int i, j;
+    int new_flg = 0;
 
     fp = fopen(event_path, "r");
     if (fp == NULL) {
@@ -703,7 +719,24 @@ int load_treasure(SDL_Renderer *renderer) {
         return 1;
     }
 
-    for(i = 0;fgets(buf, sizeof(buf), fp) != NULL;i++) {
+    for (i = 0;i < sizeof(treasure)/sizeof(treasure[0]);i++) {
+        if (strcmp(treasure[i].map, MAP_EVENT_NAME) == 0) {
+            new_flg = 1;
+        }
+    }
+
+    if (new_flg == 0) {
+        i = 0;
+        while (1) {
+            if (strcmp(treasure[i].map, "empty") == 0) {
+                sprintf(treasure[i].map, "%s", MAP_EVENT_NAME);
+                break;
+            }
+            i++;
+        }
+    }
+
+    for (i = 0;fgets(buf, sizeof(buf), fp) != NULL;i++) {
 
         if (strncmp(buf, "#", 1) != 0){
             if (strncmp(buf, "TREASURE", 8) == 0) {
@@ -711,19 +744,24 @@ int load_treasure(SDL_Renderer *renderer) {
                    "%[^,],%d,%d,%d,%[^,]",
                        event, &item_id, &map_x, &map_y, item);
 
-                if (treasure[item_id].status != 1) {
-                    sprintf(treasure[item_id].map, "%s", MAP_EVENT_NAME);
-                    treasure[item_id].map_x = map_x;
-                    treasure[item_id].map_y = map_y;
-                    treasure[item_id].status = 0;
+                for (j = 0;j < sizeof(treasure)/sizeof(treasure[0]);j++) {
+                    if (strcmp(treasure[j].map, MAP_EVENT_NAME) == 0) {
+                        if (treasure[j].treasure[item_id].status != 1) {
+                            treasure[j].treasure[item_id].map_x = map_x;
+                            treasure[j].treasure[item_id].map_y = map_y;
+                            treasure[j].treasure[item_id].status = 0;
 
-                    item_length = strlen(item);
-                    item[item_length - 1] = '\0';
-                    sprintf(treasure[item_id].item, "%s", item);
-                }
+                            item_length = strlen(item);
+                            item[item_length - 1] = '\0';
+                            sprintf(treasure[j].treasure[item_id].item, "%s", item);
+                        }
+		    }
+		}
+
             }
         }
     }
+
 
     fclose(fp);
 
@@ -789,7 +827,7 @@ int load_mapchip(SDL_Renderer *renderer) {
 
 int is_movable(int x, int y) {
 
-    int i;
+    int i, j;
     for (i = 0;i < number_of_npc_image;i++) {
         if (npc[i].npc.map_x == x && npc[i].npc.map_y == y) {
             return 1;
@@ -797,10 +835,12 @@ int is_movable(int x, int y) {
     }
 
     for (i = 0;i < sizeof(treasure)/sizeof(treasure[0]);i++) {
-        if (treasure[i].map_x == x && treasure[i].map_y == y &&
-            strcmp(treasure[i].map, MAP_EVENT_NAME) == 0) {
-            return 1;
-        }
+        for (j = 0;j < sizeof(treasure->treasure)/sizeof(treasure->treasure[0]);j++) {
+            if (treasure[i].treasure[j].map_x == x && treasure[i].treasure[j].map_y == y &&
+                strcmp(treasure[i].map, MAP_EVENT_NAME) == 0) {
+                return 1;
+            }
+	}
     }
 
     if ( x < 0 || x > COL - 1 || y  < 0 || y > ROW - 1) {
@@ -1131,28 +1171,34 @@ int message_engine(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
 
 int get_treasure_message(char **message) {
 
-    int i;
+    int i, j;
 
     for (i = 0;i < sizeof(treasure)/sizeof(treasure[0]);i++) {
-        if ((treasure[i].map_x == player.map_x && treasure[i].map_y == player.map_y - 1 &&
-            strcmp(treasure[i].map, MAP_EVENT_NAME) == 0) ||
-            (treasure[i].map_x == player.map_x && treasure[i].map_y == player.map_y + 1 &&
-            strcmp(treasure[i].map, MAP_EVENT_NAME) == 0) ||
-            (treasure[i].map_x == player.map_x + 1 && treasure[i].map_y == player.map_y &&
-            strcmp(treasure[i].map, MAP_EVENT_NAME) == 0) ||
-            (treasure[i].map_x == player.map_x - 1 && treasure[i].map_y == player.map_y &&
-            strcmp(treasure[i].map, MAP_EVENT_NAME) == 0)
-           ) {
+        for (j = 0;j < sizeof(treasure->treasure)/sizeof(treasure->treasure[0]);j++) {
+            if ((treasure[i].treasure[j].map_x == player.map_x &&
+                 treasure[i].treasure[j].map_y == player.map_y - 1 &&
+                 strcmp(treasure[i].map, MAP_EVENT_NAME) == 0) ||
+                (treasure[i].treasure[j].map_x == player.map_x &&
+                 treasure[i].treasure[j].map_y == player.map_y + 1 &&
+                 strcmp(treasure[i].map, MAP_EVENT_NAME) == 0) ||
+                (treasure[i].treasure[j].map_x == player.map_x + 1 &&
+                 treasure[i].treasure[j].map_y == player.map_y &&
+                 strcmp(treasure[i].map, MAP_EVENT_NAME) == 0) ||
+                (treasure[i].treasure[j].map_x == player.map_x - 1 &&
+                 treasure[i].treasure[j].map_y == player.map_y &&
+                 strcmp(treasure[i].map, MAP_EVENT_NAME) == 0)
+               ) {
 
-            if (treasure[i].status == 0) {
-                *message = strncat(treasure[i].item, "を手に入れた！", 21);
-                treasure[i].status = 1;
-            } else {
-                *message = "からっぽ！";
+                if (treasure[i].treasure[j].status == 0) {
+                    *message = strncat(treasure[i].treasure[j].item, "を手に入れた！", 21);
+                    treasure[i].treasure[j].status = 1;
+                } else {
+                    *message = "からっぽ！";
+                }
+
+                sound_se("treasure.wav");
             }
-
-            sound_se("treasure.wav");
-        }
+	}
     }
 
     return 0;
