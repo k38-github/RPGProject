@@ -65,6 +65,10 @@ int main (int argc, char *argv[]) {
 	}
     }
 
+    for (i = 0;i < sizeof(door)/sizeof(door[0]);i++) {
+        door[i].status = 9;
+    }
+
     music = Mix_LoadMUS("music/bgm/filed.ogg");
     if (music == NULL) {
         return 1;
@@ -87,6 +91,7 @@ int main (int argc, char *argv[]) {
         SDL_RenderClear(renderer);
         draw_map(renderer);
         draw_treasure(renderer);
+	draw_door(renderer, e);
 
         npc_animation(renderer);
 
@@ -113,6 +118,8 @@ int main (int argc, char *argv[]) {
                 }
             } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE){
                 break;
+            } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SPACE){
+		space_handling();
             }
         }
 
@@ -452,6 +459,26 @@ int draw_treasure(SDL_Renderer *renderer){
     return 0;
 }
 
+int draw_door(SDL_Renderer *renderer, SDL_Event e){
+
+    int i;
+
+    for(i = 0;i<sizeof(door)/sizeof(door[0]);i++){
+	if (door[i].status != 9) {
+            SDL_Rect imageRect=(SDL_Rect){0, 0, IMAGE_WIDTH, IMAGE_HEIGHT};
+            SDL_Rect drawRect=(SDL_Rect){(door[i].map_x * GRID_SIZE) - player.offset_x,
+                                         (door[i].map_y * GRID_SIZE) - player.offset_y,
+                                         IMAGE_WIDTH*MAGNIFICATION, IMAGE_HEIGHT*MAGNIFICATION};
+
+            if (door[i].status == 0){
+                SDL_RenderCopy(renderer, mapchip[17].map_image, &imageRect, &drawRect);
+            }
+	}
+    }
+
+    return 0;
+}
+
 int load_move(SDL_Renderer *renderer, SDL_Texture *player_image) {
     char event_path[256] = {0};
 
@@ -493,6 +520,7 @@ int load_move(SDL_Renderer *renderer, SDL_Texture *player_image) {
                         sprintf(map_path, "data/%s.map", new_map_name);
                         load_map(map_path);
                         load_treasure(renderer);
+			load_door(renderer);
 
                         load_bgm();
 
@@ -768,6 +796,51 @@ int load_treasure(SDL_Renderer *renderer) {
     return 0;
 }
 
+int load_door(SDL_Renderer *renderer) {
+    char event_path[256] = {0};
+
+    sprintf(event_path, "data/%s.evt", MAP_EVENT_NAME);
+
+    FILE *fp;
+    char event[256] = {0};
+    int map_x;
+    int map_y;
+
+    char buf[256] = {0};
+    int i;
+
+    fp = fopen(event_path, "r");
+    if (fp == NULL) {
+        printf("file open error. %d\n", __LINE__);
+        return 1;
+    }
+
+    for (i = 0;i < sizeof(door)/sizeof(door[0]);i++) {
+        door[i].status = 9;
+    }
+
+    for (i = 0;fgets(buf, sizeof(buf), fp) != NULL;i++) {
+
+        if (strncmp(buf, "#", 1) != 0){
+            if (strncmp(buf, "DOOR", 4) == 0) {
+                sscanf(buf,
+                   "%[^,],%d,%d",
+                       event, &map_x, &map_y);
+
+                 door[i].map_x = map_x;
+                 door[i].map_y = map_y;
+                 door[i].status = 0;
+
+            }
+        }
+    }
+
+
+    fclose(fp);
+
+    return 0;
+}
+
 int load_map(char *map_name) {
     FILE *fp;
     int i = 0;
@@ -841,6 +914,12 @@ int is_movable(int x, int y) {
                 return 1;
             }
 	}
+    }
+
+    for (i = 0;i < sizeof(door)/sizeof(door[0]);i++) {
+        if (door[i].map_x == x && door[i].map_y == y && door[i].status == 0) {
+            return 2;
+        }
     }
 
     if ( x < 0 || x > COL - 1 || y  < 0 || y > ROW - 1) {
@@ -930,15 +1009,6 @@ int window_engine(SDL_Renderer *renderer, WINDOW window) {
 }
 
 int window_update(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
-
-
-    if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SPACE){
-        if (message_window.visible == OUT_VISIBLE) {
-            message_window.visible = IN_VISIBLE;
-        } else {
-            message_window.visible = OUT_VISIBLE;
-        }
-    }
 
     if (message_window.visible == IN_VISIBLE) {
         window_engine(renderer, message_window);
@@ -1339,3 +1409,56 @@ int draw_debug_info(SDL_Renderer *renderer, TTF_Font *font) {
 
 }
 
+int space_handling() {
+
+    if(open_door() == 1) {
+        message_window_status();
+    }
+
+    return 0;
+}
+
+int open_door() {
+    int i;
+    char *se_file = "door.ogg";
+
+    for(i = 0;i<sizeof(door)/sizeof(door[0]);i++){
+        if (player.direction == UP) {
+            if (door[i].map_x == player.map_x && door[i].map_y == player.map_y - 1) {
+                door[i].status = 1;
+                sound_se(se_file);
+		return 0;
+            }
+        } else if (player.direction == DOWN) {
+            if (door[i].map_x == player.map_x && door[i].map_y == player.map_y + 1) {
+                door[i].status = 1;
+                sound_se(se_file);
+		return 0;
+            }
+        } else if (player.direction == RIGHT) {
+            if (door[i].map_x == player.map_x + 1 && door[i].map_y == player.map_y) {
+                door[i].status = 1;
+                sound_se(se_file);
+		return 0;
+            }
+        } else if (player.direction == LEFT) {
+            if (door[i].map_x == player.map_x - 1 && door[i].map_y == player.map_y) {
+                door[i].status = 1;
+                sound_se(se_file);
+		return 0;
+            }
+        }
+    }
+
+    return 1;
+}
+
+int message_window_status() {
+    if (message_window.visible == OUT_VISIBLE) {
+        message_window.visible = IN_VISIBLE;
+    } else {
+        message_window.visible = OUT_VISIBLE;
+    }
+
+    return 0;
+}

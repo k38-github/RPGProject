@@ -61,6 +61,12 @@ typedef struct {
     TREASURE treasure[256];
 } TREASURE_FRAME;
 
+typedef struct {
+    int map_x;
+    int map_y;
+    int status;
+} DOOR;
+
 int clac_offset(int, int, int *, int *);
 int load_image(SDL_Renderer *, SDL_Texture **, char *);
 int player_animation(SDL_Renderer *, SDL_Texture *);
@@ -82,6 +88,9 @@ int load_map(char *);
 int draw_map(SDL_Renderer *);
 int load_treasure(SDL_Renderer *);
 int draw_treasure(SDL_Renderer *);
+int load_door(SDL_Renderer *);
+int draw_door(SDL_Renderer *, SDL_Event);
+int open_door(void);
 int is_movable(int, int);
 int fade_out(SDL_Renderer *, SDL_Texture *);
 
@@ -90,6 +99,7 @@ int make_box(SDL_Renderer *, int, int, int, int, int, int, int, int);
 int make_triangle(SDL_Renderer *, int, int, int, int, int, int, int, int, int, int);
 int window_update(SDL_Renderer *, TTF_Font *, SDL_Event);
 int window_engine(SDL_Renderer *, WINDOW);
+int message_window_status();
 int message_engine(SDL_Renderer *, TTF_Font *, SDL_Event);
 int display_character_string(SDL_Renderer *, TTF_Font *, char *, double, double);
 int get_message(SDL_Event, char **);
@@ -99,6 +109,7 @@ int u8mb(const char);
 int flash_triangle(SDL_Renderer *);
 
 int draw_debug_info(SDL_Renderer *, TTF_Font *);
+int space_handling(void);
 
 /*** Initialize value ***/
 
@@ -131,6 +142,7 @@ CARACTER player = {1, 1, 32, 32, 0, 0, 0, 0, DOWN, FALSE};
 NPC npc[256] = {0};
 
 TREASURE_FRAME treasure[256] = {0};
+DOOR door[256] = {0};
 
 MAPCHIP mapchip[256] = {0};
 
