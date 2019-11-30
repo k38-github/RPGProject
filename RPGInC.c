@@ -322,7 +322,7 @@ int load_npc(SDL_Renderer *renderer) {
 int npc_animation(SDL_Renderer *renderer) {
 
     int i;
-    for(i = 0; number_of_npc_image >= i;i++) {
+    for(i = 0; i < number_of_npc_image;i++) {
 
         int x = ((frame / animecycle) % 4) * 16;
         int y = npc[i].npc.direction * IMAGE_HEIGHT;
@@ -1044,11 +1044,13 @@ int message_engine(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
     char isspace[3] = {0};
     char isasterisk[3] = {0};
 
+    char *se_file = "conversation.ogg";
+
     if (state == OFF) {
         get_message(e, &message);
         state = ON;
     } else {
-        sound_se("conversation.ogg");
+        sound_se(se_file);
 
         strcpy(message_tmp, message);
         message_length = strlen(message);
@@ -1111,7 +1113,7 @@ int message_engine(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
 
                         if ( SDL_PollEvent(&e) ) {
                             if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SPACE){
-                                sound_se("conversation.ogg");
+                                sound_se(se_file);
                                 break;
                             }
                         }
@@ -1120,7 +1122,7 @@ int message_engine(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
                     row_position = 0;
                     col_position = 0;
                 } else {
-                    sound_se("conversation.ogg");
+                    sound_se(se_file);
                 }
             } else if (loop_counter % row_size > 0) {
                 col_position = word_length - tmp_position;
@@ -1242,6 +1244,7 @@ int message_engine(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
 int get_treasure_message(char **message) {
 
     int i, j;
+    char *se_file = "treasure.ogg";
 
     for (i = 0;i < sizeof(treasure)/sizeof(treasure[0]);i++) {
         for (j = 0;j < sizeof(treasure->treasure)/sizeof(treasure->treasure[0]);j++) {
@@ -1266,7 +1269,7 @@ int get_treasure_message(char **message) {
                     *message = "からっぽ！";
                 }
 
-                sound_se("treasure.wav");
+                sound_se(se_file);
             }
 	}
     }
