@@ -11,6 +11,7 @@ typedef enum {DOWN, LEFT, RIGHT, UP} DIRECTION;
 typedef enum {FALSE, TRUE} MOVING;
 typedef enum {OUT_VISIBLE, IN_VISIBLE} VISIBLE;
 typedef enum {OFF, ON} STATE;
+typedef enum {TALK, MEMORY, STATUS, EQUIPMENT, OPEN, SPELL, SKILL, TOOLS, TACTICS, SEARCH} COMMAND_STATUS;
 
 typedef struct {
     int map_x;
@@ -96,12 +97,12 @@ int fade_out(SDL_Renderer *, SDL_Texture *);
 
 int make_window(SDL_Renderer *, WINDOW);
 int make_box(SDL_Renderer *, int, int, int, int, int, int, int, int);
-int make_triangle(SDL_Renderer *, int, int, int, int, int, int, int, int, int, int);
+int make_triangle(SDL_Renderer *, int, int, int, int, int, int, int, int, int, int, int);
 int window_update(SDL_Renderer *, TTF_Font *, SDL_Event);
 int window_engine(SDL_Renderer *, WINDOW);
 int message_window_status();
 int message_engine(SDL_Renderer *, TTF_Font *, SDL_Event);
-int display_character_string(SDL_Renderer *, TTF_Font *, char *, double, double);
+int display_character_string(SDL_Renderer *, TTF_Font *, char *, double, double, int);
 int get_message(SDL_Event, char **);
 int get_treasure_message(char **);
 
@@ -110,6 +111,9 @@ int flash_triangle(SDL_Renderer *);
 
 int draw_debug_info(SDL_Renderer *, TTF_Font *);
 int space_handling(void);
+
+int commands_window(SDL_Renderer *, TTF_Font *, SDL_Event);
+int check_command_status(COMMAND_STATUS *, int, int);
 
 /*** Initialize value ***/
 
@@ -149,10 +153,13 @@ MAPCHIP mapchip[256] = {0};
 int *map_array;
 
 WINDOW message_window = {140, 334, 360, 140, 255, OUT_VISIBLE};
+WINDOW debug_window = {5, 5, 100, 50, 255, OUT_VISIBLE};
+WINDOW command_window = {16, 16, 216, 160, 255, OUT_VISIBLE};
 
 char *message = "そっちには　だれも　いないよ！";
 
 STATE state = OFF;
 STATE debug_state = OFF;
+COMMAND_STATUS command_status = TALK;
 
 #endif
