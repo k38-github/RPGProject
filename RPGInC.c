@@ -217,28 +217,28 @@ int player_move(SDL_Event e) {
     if (message_window.visible == OUT_VISIBLE) {
         if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_UP){
             player.direction = UP;
-            if (is_movable(player.map_x, player.map_y - 1) == 0) {
+            if (is_movable(player.map_x, player.map_y - 1) == TRUE) {
                 player.velocity_x = 0;
                 player.velocity_y = -speed;
                 player.moving = TRUE;
             }
         } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_DOWN){
             player.direction = DOWN;
-            if (is_movable(player.map_x, player.map_y + 1) == 0) {
+            if (is_movable(player.map_x, player.map_y + 1) == TRUE) {
                 player.velocity_x = 0;
                 player.velocity_y = speed;
                 player.moving = TRUE;
             }
         } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_RIGHT){
             player.direction = RIGHT;
-            if (is_movable(player.map_x + 1, player.map_y) == 0) {
+            if (is_movable(player.map_x + 1, player.map_y) == TRUE) {
                 player.velocity_x = speed;
                 player.velocity_y = 0;
                 player.moving = TRUE;
             }
         } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_LEFT){
             player.direction = LEFT;
-            if (is_movable(player.map_x - 1, player.map_y) == 0) {
+            if (is_movable(player.map_x - 1, player.map_y) == TRUE) {
                 player.velocity_x = -speed;
                 player.velocity_y = 0;
                 player.moving = TRUE;
@@ -375,28 +375,28 @@ int npc_move(DIRECTION direction, int element) {
         if (frame == 0) {
             if (direction == UP){
                 npc[element].npc.direction = UP;
-                if (is_movable(npc[element].npc.map_x, npc[element].npc.map_y - 1) == 0) {
+                if (is_movable(npc[element].npc.map_x, npc[element].npc.map_y - 1) == TRUE) {
                     npc[element].npc.velocity_x = 0;
                     npc[element].npc.velocity_y = -speed;
                     npc[element].npc.moving = TRUE;
                 }
             } else if (direction == DOWN){
                 npc[element].npc.direction = DOWN;
-                if (is_movable(npc[element].npc.map_x, npc[element].npc.map_y + 1) == 0) {
+                if (is_movable(npc[element].npc.map_x, npc[element].npc.map_y + 1) == TRUE) {
                     npc[element].npc.velocity_x = 0;
                     npc[element].npc.velocity_y = speed;
                     npc[element].npc.moving = TRUE;
                 }
             } else if (direction == RIGHT){
                 npc[element].npc.direction = RIGHT;
-                if (is_movable(npc[element].npc.map_x + 1, npc[element].npc.map_y) == 0) {
+                if (is_movable(npc[element].npc.map_x + 1, npc[element].npc.map_y) == TRUE) {
                     npc[element].npc.velocity_x = speed;
                     npc[element].npc.velocity_y = 0;
                     npc[element].npc.moving = TRUE;
                 }
             } else if (direction == LEFT){
                 npc[element].npc.direction = LEFT;
-                if (is_movable(npc[element].npc.map_x - 1, npc[element].npc.map_y) == 0) {
+                if (is_movable(npc[element].npc.map_x - 1, npc[element].npc.map_y) == TRUE) {
                     npc[element].npc.velocity_x = -speed;
                     npc[element].npc.velocity_y = 0;
                     npc[element].npc.moving = TRUE;
@@ -905,7 +905,7 @@ int is_movable(int x, int y) {
     int i, j;
     for (i = 0;i < number_of_npc_image;i++) {
         if (npc[i].npc.map_x == x && npc[i].npc.map_y == y) {
-            return 1;
+            return TALK;
         }
     }
 
@@ -913,14 +913,14 @@ int is_movable(int x, int y) {
         for (j = 0;j < sizeof(treasure->treasure)/sizeof(treasure->treasure[0]);j++) {
             if (treasure[i].treasure[j].map_x == x && treasure[i].treasure[j].map_y == y &&
                 strcmp(treasure[i].map, MAP_EVENT_NAME) == 0) {
-                return 1;
+                return SEARCH;
             }
         }
     }
 
     for (i = 0;i < sizeof(door)/sizeof(door[0]);i++) {
         if (door[i].map_x == x && door[i].map_y == y && door[i].status == 0) {
-            return 2;
+            return OPEN;
         }
     }
 
@@ -936,7 +936,7 @@ int is_movable(int x, int y) {
         return 1;
     }
 
-    return 0;
+    return TRUE;
 }
 
 int clac_offset(int x, int y, int *offset_x, int *offset_y) {
@@ -1006,19 +1006,17 @@ int make_window(SDL_Renderer *renderer, WINDOW window) {
 
 }
 
-int window_engine(SDL_Renderer *renderer, WINDOW window) {
-
-    make_window(renderer, window);
-
-    return 0;
-}
-
 int window_update(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
 
     if (message_window.visible == IN_VISIBLE) {
-        // window_engine(renderer, message_window);
-        make_window(renderer, message_window);
-        message_engine(renderer, font, e);
+        if (state == OFF) {
+            state = ON;
+            get_message();
+        } else {
+            make_window(renderer, message_window);
+            message_engine(renderer, font, e);
+            state = OFF;
+        }
     }
 
     return 0;
@@ -1052,292 +1050,359 @@ int message_engine(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
 
     char *se_file = "conversation.ogg";
 
-    if (state == OFF) {
-        get_message(e, &message);
-        state = ON;
-    } else {
-        sound_se(se_file);
+    sound_se(se_file);
 
-        strcpy(message_tmp, message);
-        message_length = strlen(message);
+    strcpy(message_tmp, message);
+    message_length = strlen(message);
 
-        while (*message != '\0') {
-            SDL_Delay(60);
+    while (*message != '\0') {
+        SDL_Delay(60);
 
-            byt = u8mb(*message);
-            message += u8mb(*message);
+        byt = u8mb(*message);
+        message += u8mb(*message);
 
-            remaining_message_length = strlen(message);
+        remaining_message_length = strlen(message);
 
-            memset(word, '\0', 6);
+        memset(word, '\0', 6);
 
-            byte_counter = 0;
-            for (x=word_length;x<message_length - remaining_message_length;x++) {
-                sprintf(&word[byte_counter], "%c", message_tmp[x]);
-                byte_counter++;
-            }
+        byte_counter = 0;
+        for (x=word_length;x<message_length - remaining_message_length;x++) {
+            sprintf(&word[byte_counter], "%c", message_tmp[x]);
+            byte_counter++;
+        }
 
-            // 改行判定(半角スペースが2つ続いたら改行とみなす)
-            if (*word == ' ') {
-                if (strcmp(isspace, "  ") == 0) {
-                    memset(isspace, '\0', 3);
-                }
-                strncat(isspace, word, 1);
-            } else {
+        // 改行判定(半角スペースが2つ続いたら改行とみなす)
+        if (*word == ' ') {
+            if (strcmp(isspace, "  ") == 0) {
                 memset(isspace, '\0', 3);
             }
+            strncat(isspace, word, 1);
+        } else {
+            memset(isspace, '\0', 3);
+        }
 
-            if (strcmp(isspace, "  ") == 0) {
-                if (loop_counter % col_size != 0) {
-                    loop_counter = loop_counter + (row_size - (loop_counter % row_size) - 1);
-                }
+        if (strcmp(isspace, "  ") == 0) {
+            if (loop_counter % col_size != 0) {
+                loop_counter = loop_counter + (row_size - (loop_counter % row_size) - 1);
             }
+        }
 
-            // 改ページ判定(アスタリスクが2つ続いたら改ページとみなす)
-            if (*word == '*') {
-                if (strcmp(isasterisk, "**") == 0) {
-                    memset(isasterisk, '\0', 3);
-                }
-                strncat(isasterisk, word, 1);
-                strncpy(word, " ", 1);
-            } else {
+        // 改ページ判定(アスタリスクが2つ続いたら改ページとみなす)
+        if (*word == '*') {
+            if (strcmp(isasterisk, "**") == 0) {
                 memset(isasterisk, '\0', 3);
             }
+            strncat(isasterisk, word, 1);
+            strncpy(word, " ", 1);
+        } else {
+            memset(isasterisk, '\0', 3);
+        }
 
-            if (strcmp(isasterisk, "**") == 0) {
-                loop_counter = loop_counter + (col_size - (loop_counter % col_size) - 1);
-            }
+        if (strcmp(isasterisk, "**") == 0) {
+            loop_counter = loop_counter + (col_size - (loop_counter % col_size) - 1);
+        }
 
-            // 折り返し判定
-            if (loop_counter != 0 && loop_counter % row_size == 0) {
-                row_position += row_size;
-                col_position = 0;
-                tmp_position = word_length;
-                if (loop_counter % col_size == 0 ) {
-                    while (1) {
-                        flash_triangle(renderer);
+        // 折り返し判定
+        if (loop_counter != 0 && loop_counter % row_size == 0) {
+            row_position += row_size;
+            col_position = 0;
+            tmp_position = word_length;
+            if (loop_counter % col_size == 0 ) {
+                while (1) {
+                    flash_triangle(renderer);
 
-                        if ( SDL_PollEvent(&e) ) {
-                            if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SPACE){
-                                sound_se(se_file);
-                                break;
-                            }
+                    if ( SDL_PollEvent(&e) ) {
+                        if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SPACE){
+                            sound_se(se_file);
+                            break;
                         }
                     }
-                    make_window(renderer, message_window);
-                    row_position = 0;
-                    col_position = 0;
-                } else {
-                    sound_se(se_file);
                 }
-            } else if (loop_counter % row_size > 0) {
-                col_position = word_length - tmp_position;
+                make_window(renderer, message_window);
+                row_position = 0;
+                col_position = 0;
+            } else {
+                sound_se(se_file);
             }
+        } else if (loop_counter % row_size > 0) {
+            col_position = word_length - tmp_position;
+        }
 
-            display_character_string(renderer, font, word, start_x + col_position * inter_char, start_y + row_position, 0);
+        display_character_string(renderer, font, word, start_x + col_position * inter_char, start_y + row_position, 0);
 
-            word_length = message_length - remaining_message_length;
+        word_length = message_length - remaining_message_length;
 
-            if ( SDL_PollEvent(&e) ) {
-                if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SPACE) {
-                    col_position = col_position + byt;
-                    loop_counter++;
+        if ( SDL_PollEvent(&e) ) {
+            if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SPACE) {
+                col_position = col_position + byt;
+                loop_counter++;
 
-                    memset(message_out, '\0', 100);
+                memset(message_out, '\0', 100);
 
-                    while (*message != '\0') {
-                        byt = u8mb(*message);
-                        message += u8mb(*message);
+                while (*message != '\0') {
+                    byt = u8mb(*message);
+                    message += u8mb(*message);
 
-                        remaining_message_length = strlen(message);
+                    remaining_message_length = strlen(message);
 
-                        memset(word, '\0', 6);
+                    memset(word, '\0', 6);
 
-                        byte_counter = 0;
-                        for (x=word_length;x<message_length - remaining_message_length;x++) {
-                            sprintf(&word[byte_counter], "%c", message_tmp[x]);
-                            byte_counter++;
-                        }
+                    byte_counter = 0;
+                    for (x=word_length;x<message_length - remaining_message_length;x++) {
+                        sprintf(&word[byte_counter], "%c", message_tmp[x]);
+                        byte_counter++;
+                    }
 
-                        // 改行判定(半角スペースが2つ続いたら改行とみなす)
-                        if (*word == ' ') {
-                            if (strcmp(isspace, "  ") == 0) {
-                                memset(isspace, '\0', 3);
-                            }
-                            strncat(isspace, word, 1);
-                        } else {
+                    // 改行判定(半角スペースが2つ続いたら改行とみなす)
+                    if (*word == ' ') {
+                        if (strcmp(isspace, "  ") == 0) {
                             memset(isspace, '\0', 3);
                         }
+                        strncat(isspace, word, 1);
+                    } else {
+                        memset(isspace, '\0', 3);
+                    }
 
-                        if (strcmp(isspace, "  ") == 0) {
-                            if (loop_counter % col_size != 0) {
-                                loop_counter = loop_counter + (row_size - (loop_counter % row_size) - 1);
-                            }
+                    if (strcmp(isspace, "  ") == 0) {
+                        if (loop_counter % col_size != 0) {
+                            loop_counter = loop_counter + (row_size - (loop_counter % row_size) - 1);
                         }
+                    }
 
-                        // 改ページ判定(アスタリスクが2つ続いたら改ページとみなす)
-                        if (*word == '*') {
-                            if (strcmp(isasterisk, "**") == 0) {
-                                memset(isasterisk, '\0', 3);
-                            }
-                            strncat(isasterisk, word, 1);
-                            strncpy(word, " ", 1);
-                        } else {
+                    // 改ページ判定(アスタリスクが2つ続いたら改ページとみなす)
+                    if (*word == '*') {
+                        if (strcmp(isasterisk, "**") == 0) {
                             memset(isasterisk, '\0', 3);
                         }
+                        strncat(isasterisk, word, 1);
+                        strncpy(word, " ", 1);
+                    } else {
+                        memset(isasterisk, '\0', 3);
+                    }
 
-                        if (strcmp(isasterisk, "**") == 0) {
-                            loop_counter = loop_counter + (col_size - (loop_counter % col_size) - 1);
-                        }
+                    if (strcmp(isasterisk, "**") == 0) {
+                        loop_counter = loop_counter + (col_size - (loop_counter % col_size) - 1);
+                    }
 
-                        // 折り返し判定
-                        if (loop_counter % row_size == 0) {
-                            display_character_string(renderer, font, message_out, start_x + col_position * inter_char, start_y + row_position, 0);
-                            row_position += row_size;
-                            col_position = 0;
-                            tmp_position = word_length;
-                            memset(message_out, '\0', 100);
+                    // 折り返し判定
+                    if (loop_counter % row_size == 0) {
+                        display_character_string(renderer, font, message_out, start_x + col_position * inter_char, start_y + row_position, 0);
+                        row_position += row_size;
+                        col_position = 0;
+                        tmp_position = word_length;
+                        memset(message_out, '\0', 100);
 
-                            if (loop_counter % col_size == 0 ) {
-                                while (1) {
-                                    flash_triangle(renderer);
+                        if (loop_counter % col_size == 0 ) {
+                            while (1) {
+                                flash_triangle(renderer);
 
-                                    if ( SDL_PollEvent(&e) ) {
-                                        if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SPACE){
-                                            break;
-                                        }
+                                if ( SDL_PollEvent(&e) ) {
+                                    if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SPACE){
+                                        break;
                                     }
                                 }
-                                make_window(renderer, message_window);
-                                row_position = 0;
-                                col_position = 0;
                             }
+                            make_window(renderer, message_window);
+                            row_position = 0;
+                            col_position = 0;
                         }
-
-                        strcat(message_out, word);
-                        word_length = message_length - remaining_message_length;
-
-                        loop_counter++;
                     }
-                    display_character_string(renderer, font, message_out, start_x + col_position * inter_char, start_y + row_position, 0);
 
+                    strcat(message_out, word);
+                    word_length = message_length - remaining_message_length;
+
+                    loop_counter++;
+                }
+                display_character_string(renderer, font, message_out, start_x + col_position * inter_char, start_y + row_position, 0);
+
+                break;
+            }
+        }
+
+        loop_counter++;
+    }
+
+    if (message_window.visible == IN_VISIBLE) {
+        while (1) {
+            flash_triangle(renderer);
+
+            if ( SDL_PollEvent(&e) ) {
+                if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SPACE){
+                    message_window.visible = OUT_VISIBLE;
                     break;
                 }
             }
-
-            loop_counter++;
         }
-
-        if (message_window.visible == IN_VISIBLE) {
-            while (1) {
-                flash_triangle(renderer);
-
-                if ( SDL_PollEvent(&e) ) {
-                    if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SPACE){
-                        message_window.visible = OUT_VISIBLE;
-                        break;
-                    }
-                }
-            }
-        }
-
-        state = OFF;
     }
 
     return 0;
 }
 
-int get_treasure_message(char **message) {
+int get_treasure_message() {
 
     int i, j;
     char *se_file = "treasure.ogg";
 
     for (i = 0;i < sizeof(treasure)/sizeof(treasure[0]);i++) {
         for (j = 0;j < sizeof(treasure->treasure)/sizeof(treasure->treasure[0]);j++) {
-            if ((treasure[i].treasure[j].map_x == player.map_x &&
-                 treasure[i].treasure[j].map_y == player.map_y - 1 &&
-                 strcmp(treasure[i].map, MAP_EVENT_NAME) == 0) ||
-                (treasure[i].treasure[j].map_x == player.map_x &&
-                 treasure[i].treasure[j].map_y == player.map_y + 1 &&
-                 strcmp(treasure[i].map, MAP_EVENT_NAME) == 0) ||
-                (treasure[i].treasure[j].map_x == player.map_x + 1 &&
-                 treasure[i].treasure[j].map_y == player.map_y &&
-                 strcmp(treasure[i].map, MAP_EVENT_NAME) == 0) ||
-                (treasure[i].treasure[j].map_x == player.map_x - 1 &&
-                 treasure[i].treasure[j].map_y == player.map_y &&
-                 strcmp(treasure[i].map, MAP_EVENT_NAME) == 0)
-               ) {
+            if (player.direction == UP) {
+                if (treasure[i].treasure[j].map_x == player.map_x &&
+                    treasure[i].treasure[j].map_y == player.map_y - 1 &&
+                    strcmp(treasure[i].map, MAP_EVENT_NAME) == 0) {
 
-                if (treasure[i].treasure[j].status == 0) {
-                    *message = strncat(treasure[i].treasure[j].item, "を手に入れた！", 21);
-                    treasure[i].treasure[j].status = 1;
-                } else {
-                    *message = "からっぽ！";
+                    sound_se(se_file);
+
+                    if (treasure[i].treasure[j].status == 0) {
+                        message = strncat(treasure[i].treasure[j].item, TRESUREBOX_MESSAGE, 21);
+                        treasure[i].treasure[j].status = 1;
+                    } else {
+                        message = TRESUREBOX_EMPTY_MESSAGE;
+                    }
+
+		    return 0;
                 }
+	    } else if (player.direction == DOWN) {
+	        if (treasure[i].treasure[j].map_x == player.map_x &&
+                    treasure[i].treasure[j].map_y == player.map_y + 1 &&
+                    strcmp(treasure[i].map, MAP_EVENT_NAME) == 0) {
 
-                sound_se(se_file);
+                    sound_se(se_file);
+
+                    if (treasure[i].treasure[j].status == 0) {
+                        message = strncat(treasure[i].treasure[j].item, TRESUREBOX_MESSAGE, 21);
+                        treasure[i].treasure[j].status = 1;
+                    } else {
+                        message = TRESUREBOX_EMPTY_MESSAGE;
+                    }
+
+		    return 0;
+
+                }
+	    } else if (player.direction == RIGHT) {
+                if (treasure[i].treasure[j].map_x == player.map_x + 1 &&
+                    treasure[i].treasure[j].map_y == player.map_y &&
+                    strcmp(treasure[i].map, MAP_EVENT_NAME) == 0) {
+
+                    sound_se(se_file);
+
+                    if (treasure[i].treasure[j].status == 0) {
+                        message = strncat(treasure[i].treasure[j].item, TRESUREBOX_MESSAGE, 21);
+                        treasure[i].treasure[j].status = 1;
+                    } else {
+                        message = TRESUREBOX_EMPTY_MESSAGE;
+                    }
+
+		    return 0;
+
+	        }
+	    } else if (player.direction == LEFT) {
+                if (treasure[i].treasure[j].map_x == player.map_x - 1 &&
+                    treasure[i].treasure[j].map_y == player.map_y &&
+                    strcmp(treasure[i].map, MAP_EVENT_NAME) == 0) {
+
+                    sound_se(se_file);
+
+                    if (treasure[i].treasure[j].status == 0) {
+                        message = strncat(treasure[i].treasure[j].item, TRESUREBOX_MESSAGE, 21);
+                        treasure[i].treasure[j].status = 1;
+                    } else {
+                        message = TRESUREBOX_EMPTY_MESSAGE;
+                    }
+
+		    return 0;
+
+	        }
             }
         }
     }
 
+    message = SEARCH_MESSAGE;
+
     return 0;
 }
 
-int get_npc_message(char **message) {
+int get_npc_message() {
 
     int i;
 
     for(i = 0;i < number_of_npc_image;i++) {
-        if (npc[i].npc.map_x == player.map_x && npc[i].npc.map_y == player.map_y - 1) {
-            npc[i].npc.direction = DOWN;
-            *message = npc[i].message;
-            break;
-        }
-        if (npc[i].npc.map_x == player.map_x && npc[i].npc.map_y == player.map_y + 1) {
-            npc[i].npc.direction = UP;
-            *message = npc[i].message;
-            break;
-        }
-        if (npc[i].npc.map_x == player.map_x + 1 && npc[i].npc.map_y == player.map_y) {
-            npc[i].npc.direction = LEFT;
-            *message = npc[i].message;
-            break;
-        }
-        if (npc[i].npc.map_x == player.map_x - 1 && npc[i].npc.map_y == player.map_y) {
-            npc[i].npc.direction = RIGHT;
-            *message = npc[i].message;
-            break;
-        }
+        if (player.direction == UP) {
+            if (npc[i].npc.map_x == player.map_x && npc[i].npc.map_y == player.map_y - 1) {
+                npc[i].npc.direction = DOWN;
+                message = npc[i].message;
+                return 0;
+            }
+        } else if (player.direction == DOWN) {
+            if (npc[i].npc.map_x == player.map_x && npc[i].npc.map_y == player.map_y + 1) {
+                npc[i].npc.direction = UP;
+                message = npc[i].message;
+                return 0;
+            }
+        } else if (player.direction == RIGHT) {
+            if (npc[i].npc.map_x == player.map_x + 1 && npc[i].npc.map_y == player.map_y) {
+                npc[i].npc.direction = LEFT;
+                message = npc[i].message;
+                return 0;
+            }
+        } else if (player.direction == LEFT) {
+            if (npc[i].npc.map_x == player.map_x - 1 && npc[i].npc.map_y == player.map_y) {
+                npc[i].npc.direction = RIGHT;
+                message = npc[i].message;
+                return 0;
+            }
+	}
     }
+
+    message = TALK_MESSAGE;
 
     return 0;
 }
 
-int get_message(SDL_Event e, char **message) {
+int get_message() {
 
     int i;
 
-    *message = "そっちには　だれも　いないよ！";
+    message = SEARCH_MESSAGE;
 
     if (player.direction == UP) {
-        if (is_movable(player.map_x, player.map_y - 1) == 1) {
-            get_treasure_message(message);
-            get_npc_message(message);
+        if (is_movable(player.map_x, player.map_y - 1) == TALK) {
+            get_npc_message();
+        } else if (is_movable(player.map_x, player.map_y - 1) == SEARCH) {
+            get_treasure_message();
+        } else if (is_movable(player.map_x, player.map_y - 1) == OPEN) {
+            open_door();
+            message_window_status();
+	    state = OFF;
         }
     } else if (player.direction == DOWN) {
-        if (is_movable(player.map_x, player.map_y + 1) == 1) {
-            get_treasure_message(message);
-            get_npc_message(message);
-        }
+        if (is_movable(player.map_x, player.map_y + 1) == TALK) {
+            get_npc_message();
+        } else if (is_movable(player.map_x, player.map_y + 1) == SEARCH) {
+            get_treasure_message();
+        } else if (is_movable(player.map_x, player.map_y + 1) == OPEN) {
+            open_door();
+            message_window_status();
+	    state = OFF;
+	}
     } else if (player.direction == RIGHT) {
-        if (is_movable(player.map_x + 1, player.map_y) == 1) {
-            get_treasure_message(message);
-            get_npc_message(message);
+        if (is_movable(player.map_x + 1, player.map_y) == TALK) {
+            get_npc_message();
+        } else if (is_movable(player.map_x + 1, player.map_y) == SEARCH) {
+            get_treasure_message();
+        } else if (is_movable(player.map_x + 1, player.map_y) == OPEN) {
+            open_door();
+            message_window_status();
+	    state = OFF;
         }
     } else if (player.direction == LEFT) {
-        if (is_movable(player.map_x - 1, player.map_y) == 1) {
-            get_treasure_message(message);
-            get_npc_message(message);
+        if (is_movable(player.map_x - 1, player.map_y) == TALK) {
+            get_npc_message();
+        } else if (is_movable(player.map_x - 1, player.map_y) == SEARCH) {
+            get_treasure_message();
+        } else if (is_movable(player.map_x - 1, player.map_y) == OPEN) {
+            open_door();
+            message_window_status();
+	    state = OFF;
         }
     }
 
@@ -1422,9 +1487,7 @@ int draw_debug_info(SDL_Renderer *renderer, TTF_Font *font) {
 
 int space_handling() {
 
-    if(open_door() == 1) {
-        message_window_status();
-    }
+    message_window_status();
 
     return 0;
 }
@@ -1461,7 +1524,10 @@ int open_door() {
         }
     }
 
-    return 1;
+    message_window_status();
+    message = DOOR_MESSAGE;
+
+    return 0;
 }
 
 int message_window_status() {
@@ -1513,19 +1579,26 @@ int commands_window(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
                 break;
             } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SPACE){
                 if (command_status == TALK) {
+                    state = ON;
                     message_window_status();
+                    get_npc_message();
                     break;
                 } else if (command_status == MEMORY) {
                 } else if (command_status == STATUS) {
                 } else if (command_status == EQUIPMENT) {
                 } else if (command_status == OPEN) {
-                    open_door();
-                    break;
+                    state = ON;
+		    open_door();
+		    break;
                 } else if (command_status == SPELL) {
                 } else if (command_status == SKILL) {
                 } else if (command_status == TOOLS) {
                 } else if (command_status == TACTICS) {
                 } else if (command_status == SEARCH) {
+                    state = ON;
+                    message_window_status();
+                    get_treasure_message();
+		    break;
                 }
             } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_RIGHT){
                 if (triangle_x1 == 30) {

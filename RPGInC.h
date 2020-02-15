@@ -99,12 +99,12 @@ int make_window(SDL_Renderer *, WINDOW);
 int make_box(SDL_Renderer *, int, int, int, int, int, int, int, int);
 int make_triangle(SDL_Renderer *, int, int, int, int, int, int, int, int, int, int, int);
 int window_update(SDL_Renderer *, TTF_Font *, SDL_Event);
-int window_engine(SDL_Renderer *, WINDOW);
 int message_window_status();
 int message_engine(SDL_Renderer *, TTF_Font *, SDL_Event);
 int display_character_string(SDL_Renderer *, TTF_Font *, char *, double, double, int);
-int get_message(SDL_Event, char **);
-int get_treasure_message(char **);
+int get_message();
+int get_treasure_message();
+int get_npc_message();
 
 int u8mb(const char);
 int flash_triangle(SDL_Renderer *);
@@ -114,6 +114,13 @@ int space_handling(void);
 
 int commands_window(SDL_Renderer *, TTF_Font *, SDL_Event);
 int check_command_status(COMMAND_STATUS *, int, int);
+
+/*** message list ***/
+#define TALK_MESSAGE "そっちには　だれも　いないよ。"
+#define SEARCH_MESSAGE "あしもとを　しらべたけど　なにもないよ。"
+#define TRESUREBOX_MESSAGE "をてにいれた！"
+#define TRESUREBOX_EMPTY_MESSAGE "からっぽ！"
+#define DOOR_MESSAGE "そのほうこうに　とびらは　ないよ!"
 
 /*** Initialize value ***/
 
@@ -156,7 +163,7 @@ WINDOW message_window = {140, 334, 360, 140, 255, OUT_VISIBLE};
 WINDOW debug_window = {5, 5, 100, 50, 255, OUT_VISIBLE};
 WINDOW command_window = {16, 16, 216, 160, 255, OUT_VISIBLE};
 
-char *message = "そっちには　だれも　いないよ！";
+char *message = SEARCH_MESSAGE;
 
 STATE state = OFF;
 STATE debug_state = OFF;
