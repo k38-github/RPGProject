@@ -12,6 +12,27 @@ typedef enum {FALSE, TRUE} MOVING;
 typedef enum {OUT_VISIBLE, IN_VISIBLE} VISIBLE;
 typedef enum {OFF, ON} STATE;
 typedef enum {TALK, MEMORY, STATUS, EQUIPMENT, OPEN, SPELL, SKILL, TOOLS, TACTICS, SEARCH} COMMAND_STATUS;
+typedef enum {HP_AND_MP, OFFENSIVE_POWER, CONFIRM_STATUS} STATUS_STATUS;
+
+
+typedef struct {
+    char *name;
+    int   sex;
+    int   level;
+    int   hp;
+    int   mp;
+    int   strength;
+    int   agility;
+    int   protection;
+    int   wisdom;
+    int   luck;
+    int   max_hp;
+    int   max_mp;
+    int   offensive_power;
+    int   defensive_power;
+    int   skill_point;
+    int   experience_point;
+} CHARACTER_STATUS;
 
 typedef struct {
     int map_x;
@@ -24,6 +45,7 @@ typedef struct {
     int velocity_y;
     DIRECTION direction;
     MOVING moving;
+    CHARACTER_STATUS status;
 } CARACTER;
 
 typedef struct {
@@ -73,6 +95,7 @@ int load_image(SDL_Renderer *, SDL_Texture **, char *);
 int player_animation(SDL_Renderer *, SDL_Texture *);
 int player_update(SDL_Renderer *, SDL_Event, SDL_Texture *);
 int player_move(SDL_Event);
+int set_player_status();
 
 int load_npc(SDL_Renderer *);
 int npc_animation(SDL_Renderer *);
@@ -110,15 +133,22 @@ int u8mb(const char);
 int flash_triangle(SDL_Renderer *);
 
 int draw_debug_info(SDL_Renderer *, TTF_Font *);
-int space_handling(void);
 
-int commands_window(SDL_Renderer *, TTF_Font *, SDL_Event);
+int make_commands_window(SDL_Renderer *, TTF_Font *, SDL_Event);
 int check_command_status(COMMAND_STATUS *, int, int);
+int get_command_triangle(int *, int *, int *, int *, int *, int *);
+
+int make_status_window(SDL_Renderer *, TTF_Font *, SDL_Event);
+int check_status_status(STATUS_STATUS *, int, int);
+int get_status_triangle(int *, int *, int *, int *, int *, int *);
+
+int make_hp_and_mp_window(SDL_Renderer *, TTF_Font *, SDL_Event);
+int convert_int_to_full_width_char(int, char *);
 
 /*** message list ***/
 #define TALK_MESSAGE "そっちには　だれも　いないよ。"
 #define SEARCH_MESSAGE "あしもとを　しらべたけど　なにもないよ。"
-#define TRESUREBOX_MESSAGE "をてにいれた！"
+#define TRESUREBOX_MESSAGE "　をてにいれた！"
 #define TRESUREBOX_EMPTY_MESSAGE "からっぽ！"
 #define DOOR_MESSAGE "そのほうこうに　とびらは　ないよ!"
 
@@ -162,11 +192,16 @@ int *map_array;
 WINDOW message_window = {140, 334, 360, 140, 255, OUT_VISIBLE};
 WINDOW debug_window = {5, 5, 100, 50, 255, OUT_VISIBLE};
 WINDOW command_window = {16, 16, 216, 160, 255, OUT_VISIBLE};
+WINDOW status_window = {32, 32, 170, 135, 255, OUT_VISIBLE};
+WINDOW hp_and_mp_window = {48, 48, 170, 220, 255, OUT_VISIBLE};
 
 char *message = SEARCH_MESSAGE;
 
 STATE state = OFF;
 STATE debug_state = OFF;
 COMMAND_STATUS command_status = TALK;
+STATUS_STATUS status_status = HP_AND_MP;
+
+int back_flg = 0;
 
 #endif

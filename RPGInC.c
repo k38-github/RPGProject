@@ -54,6 +54,7 @@ int main (int argc, char *argv[]) {
 
     SDL_Texture *player_image = NULL;
     load_image(renderer, &player_image, "image/charachip/chiharu.bmp");
+    set_player_status();
 
     load_npc(renderer);
 
@@ -106,6 +107,13 @@ int main (int argc, char *argv[]) {
 
         SDL_RenderPresent(renderer);
 
+        if (back_flg > 0) {
+	    if (back_flg == 1) {
+                back_flg = 0;
+            }
+            make_commands_window(renderer, font, e);
+        }
+
         // event handling
         if ( SDL_PollEvent(&e) ) {
             if (e.type == SDL_QUIT){
@@ -119,9 +127,9 @@ int main (int argc, char *argv[]) {
             } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE){
                 break;
             } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SPACE){
-                space_handling();
+                message_window_status();
             } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_RETURN){
-                commands_window(renderer, font, e);
+                make_commands_window(renderer, font, e);
             }
         }
 
@@ -248,6 +256,17 @@ int player_move(SDL_Event e) {
 
     return 0;
 
+}
+
+int set_player_status() {
+    player.status.name = "ちはる";
+    player.status.level = 1;
+    player.status.hp = 20;
+    player.status.mp = 5;
+    player.status.max_hp = 20;
+    player.status.max_mp = 20;
+
+    return 0;
 }
 
 int load_npc(SDL_Renderer *renderer) {
@@ -1485,13 +1504,6 @@ int draw_debug_info(SDL_Renderer *renderer, TTF_Font *font) {
 
 }
 
-int space_handling() {
-
-    message_window_status();
-
-    return 0;
-}
-
 int open_door() {
     int i;
     char *se_file = "door.ogg";
@@ -1540,7 +1552,7 @@ int message_window_status() {
     return 0;
 }
 
-int commands_window(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
+int make_commands_window(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
 
     int triangle_x1 = 30;
     int triangle_y1 = 37;
@@ -1548,6 +1560,10 @@ int commands_window(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
     int triangle_y2 = 46;
     int triangle_x3 = 30;
     int triangle_y3 = 56;
+
+    get_command_triangle(&triangle_x1, &triangle_y1,
+                         &triangle_x2, &triangle_y2,
+                         &triangle_x3, &triangle_y3);
 
     make_window(renderer, command_window);
     make_triangle(renderer, triangle_x1, triangle_y1,
@@ -1572,6 +1588,12 @@ int commands_window(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
         check_command_status(&command_status, triangle_x1, triangle_y1);
         SDL_RenderPresent(renderer);
 
+        if (back_flg == 2) {
+            back_flg = 1;
+            make_status_window(renderer, font, e);
+	    break;
+        }
+
         if ( SDL_PollEvent(&e) ) {
             if (e.type == SDL_QUIT){
                 break;
@@ -1585,6 +1607,9 @@ int commands_window(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
                     break;
                 } else if (command_status == MEMORY) {
                 } else if (command_status == STATUS) {
+		    back_flg = 1;
+                    make_status_window(renderer, font, e);
+		    break;
                 } else if (command_status == EQUIPMENT) {
                 } else if (command_status == OPEN) {
                     state = ON;
@@ -1691,6 +1716,248 @@ int check_command_status(COMMAND_STATUS *command_status, int triangle_x1, int tr
             *command_status = SEARCH;
         }
     }
+
+    return 0;
+}
+
+int get_command_triangle(int *triangle_x1, int *triangle_y1,
+                         int *triangle_x2, int *triangle_y2,
+                         int *triangle_x3, int *triangle_y3) {
+    if (command_status == TALK) {
+        *triangle_x1 = 30;
+        *triangle_y1 = 37;
+        *triangle_x2 = 45;
+        *triangle_y2 = 46;
+        *triangle_x3 = 30;
+        *triangle_y3 = 56;
+    } else if (command_status == STATUS) {
+        *triangle_x1 = 30;
+        *triangle_y1 = 87;
+        *triangle_x2 = 45;
+        *triangle_y2 = 96;
+        *triangle_x3 = 30;
+        *triangle_y3 = 106;
+    }
+
+    return 0;
+}
+
+int make_status_window(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
+
+    int triangle_x1 = 47;
+    int triangle_y1 = 80;
+    int triangle_x2 = 62;
+    int triangle_y2 = 89;
+    int triangle_x3 = 47;
+    int triangle_y3 = 99;
+
+    get_status_triangle(&triangle_x1, &triangle_y1,
+                        &triangle_x2, &triangle_y2,
+                        &triangle_x3, &triangle_y3);
+
+
+    make_window(renderer, status_window);
+    make_triangle(renderer, triangle_x1, triangle_y1,
+                            triangle_x2, triangle_y2,
+                            triangle_x3, triangle_y3,
+                            255, 255, 255, 255, 1);
+
+
+    display_character_string(renderer, font, "つよさ",   70.0, 50.0,  1);
+    //display_character_string(renderer, font, "-------------", 70.0, 65.0,  1);
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
+    SDL_RenderDrawLine(renderer, 70, 73, 180, 73);
+    display_character_string(renderer, font, "HPとMP",   70.0, 80.0,  1);
+    display_character_string(renderer, font, "こうげきりょく",   70.0, 105.0, 1);
+    display_character_string(renderer, font, "つよさをみる",   70.0, 130.0, 1);
+
+    while (1) {
+
+        check_status_status(&status_status, triangle_x1, triangle_y1);
+        SDL_RenderPresent(renderer);
+
+        if ( SDL_PollEvent(&e) ) {
+            if (e.type == SDL_QUIT){
+                break;
+            } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE){
+                break;
+            } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SPACE){
+                if (status_status == HP_AND_MP) {
+                    back_flg = 2;
+                    make_hp_and_mp_window(renderer, font, e);
+                    break;
+		}
+            } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_UP){
+                if (triangle_y1 > 80) {
+                    triangle_y1 = triangle_y1 - 25;
+                    triangle_y2 = triangle_y2 - 25;
+                    triangle_y3 = triangle_y3 - 25;
+                }
+
+                make_box(renderer, 47, 80, 16, 75, 255, 0, 0, 0);
+                make_triangle(renderer, triangle_x1, triangle_y1,
+                                            triangle_x2, triangle_y2,
+                                            triangle_x3, triangle_y3,
+                                            255, 255, 255, 255, 1);
+
+            } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_DOWN){
+                if (triangle_y3 <= 135) {
+                    triangle_y1 = triangle_y1 + 25;
+                    triangle_y2 = triangle_y2 + 25;
+                    triangle_y3 = triangle_y3 + 25;
+                }
+
+                make_box(renderer, 47, 80, 16, 75, 255, 0, 0, 0);
+                make_triangle(renderer, triangle_x1, triangle_y1,
+                                            triangle_x2, triangle_y2,
+                                            triangle_x3, triangle_y3,
+                                            255, 255, 255, 255, 1);
+
+
+            }
+
+        }
+    } 
+
+    return 0;
+}
+
+int check_status_status(STATUS_STATUS *status_status, int triangle_x1, int triangle_y1) {
+
+    if (triangle_y1 == 80) {
+        *status_status = HP_AND_MP;
+    } else if (triangle_y1 == 105) {
+        *status_status = OFFENSIVE_POWER;
+    } else if (triangle_y1 == 130) {
+        *status_status = CONFIRM_STATUS;
+    }
+    return 0;
+}
+
+int get_status_triangle(int *triangle_x1, int *triangle_y1,
+                         int *triangle_x2, int *triangle_y2,
+                         int *triangle_x3, int *triangle_y3) {
+    if (command_status == HP_AND_MP) {
+        *triangle_x1 = 47;
+        *triangle_y1 = 80;
+        *triangle_x2 = 62;
+        *triangle_y2 = 89;
+        *triangle_x3 = 47;
+        *triangle_y3 = 99;
+    }
+
+    return 0;
+}
+
+int make_hp_and_mp_window(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
+
+    char level[10] = {0};
+    char hp[10] = {0};
+    char mp[10] = {0};
+    char max_hp[10] = {0};
+    char max_mp[10] = {0};
+
+    make_window(renderer, hp_and_mp_window);
+
+
+    display_character_string(renderer, font, "HPとMP",             70.0, 60.0,  1);
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
+    SDL_RenderDrawLine(renderer, 70, 83, 200, 83);
+
+    display_character_string(renderer, font, "レベル：",           70.0, 90.0,  1);
+    convert_int_to_full_width_char(player.status.level, level);
+    display_character_string(renderer, font, level,                135.0, 90.0,  1);
+
+    display_character_string(renderer, font, "なまえ：",           70.0, 115.0, 1);
+    display_character_string(renderer, font, player.status.name,   135.0, 115.0, 1);
+
+    display_character_string(renderer, font, "H",                  70.0, 140.0, 1);
+    convert_int_to_full_width_char(player.status.hp, hp);
+    display_character_string(renderer, font, hp,                   110.0, 140.0, 1);
+
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
+    SDL_RenderDrawLine(renderer, 90, 163, 170, 163);
+    convert_int_to_full_width_char(player.status.max_hp, max_hp);
+    display_character_string(renderer, font, max_hp,               110.0, 170.0, 1);
+
+    display_character_string(renderer, font, "M",                  70.0, 195.0, 1);
+    convert_int_to_full_width_char(player.status.mp, mp);
+    display_character_string(renderer, font, mp,                   110.0, 195.0, 1);
+
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
+    SDL_RenderDrawLine(renderer, 90, 218, 170, 218);
+    convert_int_to_full_width_char(player.status.max_mp, max_mp);
+    display_character_string(renderer, font, max_mp,               110.0, 225.0, 1);
+
+    while (1) {
+
+        SDL_RenderPresent(renderer);
+
+        if ( SDL_PollEvent(&e) ) {
+            if (e.type == SDL_QUIT){
+                break;
+            } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE){
+                break;
+            }
+        }
+    } 
+
+    return 0;
+}
+
+int convert_int_to_full_width_char(int num, char *str_to_return) {
+
+    int i;
+    int number;
+    int digit = 0;
+    int reverse = 0;
+    int calc_digit;
+    char tmp[256] = {};
+
+    num = num * 10 + 9;
+
+    while (num > 0) {
+        reverse = reverse * 10 + num % 10;
+        num = num / 10;
+    }
+
+    calc_digit = reverse;
+
+    while(calc_digit != 0) {
+        calc_digit = calc_digit / 10;
+	++digit;
+    } 
+
+    for (i = 0;i < digit - 1;i++) {
+        number = reverse % 10;
+
+	if (number == 9) {
+            sprintf(tmp, "%s%s", tmp , "９");
+	} else if (number == 8) {
+            sprintf(tmp, "%s%s", tmp , "８");
+	} else if (number == 7) {
+            sprintf(tmp, "%s%s", tmp , "７");
+	} else if (number == 6) {
+            sprintf(tmp, "%s%s", tmp , "６");
+	} else if (number == 5) {
+            sprintf(tmp, "%s%s", tmp , "５");
+	} else if (number == 4) {
+            sprintf(tmp, "%s%s", tmp , "４");
+	} else if (number == 3) {
+            sprintf(tmp, "%s%s", tmp , "３");
+	} else if (number == 2) {
+            sprintf(tmp, "%s%s", tmp , "２");
+	} else if (number == 1) {
+            sprintf(tmp, "%s%s", tmp , "１");
+	} else if (number == 0) {
+            sprintf(tmp, "%s%s", tmp , "０");
+	}
+
+	reverse = reverse / 10;
+
+    }
+
+    sprintf(str_to_return, "%s", tmp);
 
     return 0;
 }
