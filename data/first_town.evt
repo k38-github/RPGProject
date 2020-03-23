@@ -1,0 +1,26 @@
+# BGM, 音楽ファイル(mp3, ogg, wavなど使用可)
+# 読込みのために最後のカンマを忘れないこと
+BGM,village02.ogg,
+
+# SE, マスX座標, マスY座標, SEファイル(ogg, wavなど使用可)
+# 読込みのために最後のカンマを忘れないこと
+SE,26,36,upstairs.ogg,
+SE,27,36,upstairs.ogg,
+SE,0,17,upstairs.ogg,
+SE,0,18,upstairs.ogg,
+SE,53,17,upstairs.ogg,
+SE,53,18,upstairs.ogg,
+SE,26,0,upstairs.ogg,
+SE,27,0,upstairs.ogg,
+
+
+# MOVE, マスX座標, マスY座標, 侵入方向, 移動先マップ, 移動先マスX座標, 移動先マスY座標
+MOVE,26,36,0,field,15,12
+MOVE,27,36,0,field,15,12
+MOVE,0,17,1,field,15,12
+MOVE,0,18,1,field,15,12
+MOVE,53,17,2,field,15,12
+MOVE,53,18,2,field,15,12
+MOVE,26,0,3,field,15,12
+MOVE,27,0,3,field,15,12
+

@@ -1,0 +1,41 @@
+# BGM, 音楽ファイル(mp3, ogg, wavなど使用可)
+# 読込みのために最後のカンマを忘れないこと
+BGM,filed.ogg,
+
+# SE, マスX座標, マスY座標, SEファイル(ogg, wavなど使用可)
+# 読込みのために最後のカンマを忘れないこと
+SE,9,13,upstairs.ogg,
+
+# MOVE, マスX座標, マスY座標, 侵入方向, 移動先マップ, 移動先マスX座標, 移動先マスY座標
+MOVE,9,13,0,field,2,2
+MOVE,9,13,1,field,2,2
+MOVE,9,13,2,field,2,2
+MOVE,9,13,3,field,2,2
+
+# CHARA, キャラクター名, マスX座標, マスY座標, 向き, 移動可不可, メッセージ
+CHARA,white_cat,8,11,0,0,ここは　たからばこのへや　だよ。
+
+# TREASURE, アイテムID, マスX座標, マスY座標, 中身
+TREASURE,0,8,8,１０G
+TREASURE,1,9,8,やくそう
+TREASURE,2,10,8,フライパン
+TREASURE,3,2,2,チョコレート
+TREASURE,4,3,2,グミ
+TREASURE,5,4,2,おたま
+TREASURE,6,14,2,ふらいがえし
+TREASURE,7,15,2,ほうちょう
+TREASURE,8,16,2,まないた
+TREASURE,9,17,2,あわだてき
+TREASURE,10,2,15,１００G
+TREASURE,11,3,15,１０００G
+TREASURE,12,4,15,１００００G
+TREASURE,13,15,15,しんくのドレス
+TREASURE,14,16,15,ガラスのくつ
+
+# DOOR, マスX座標, マスY座標
+DOOR,9,10
+DOOR,3,4
+DOOR,3,12
+DOOR,16,4
+DOOR,16,12
+

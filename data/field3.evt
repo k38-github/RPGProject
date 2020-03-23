@@ -1,0 +1,41 @@
+# BGM, 音楽ファイル(mp3, ogg, wavなど使用可)
+# 読込みのために最後のカンマを忘れないこと
+BGM,feriado.mp3,
+
+# SE, マスX座標, マスY座標, SEファイル(mp3, ogg, wavなど使用可)
+# 読込みのために最後のカンマを忘れないこと
+SE,5,9,upstairs.ogg,
+SE,6,9,upstairs.ogg,
+SE,15,12,upstairs.ogg,
+SE,5,9,upstairs.ogg,
+SE,6,9,upstairs.ogg,
+SE,0,4,upstairs.ogg,
+SE,0,5,upstairs.ogg,
+SE,11,4,upstairs.ogg,
+SE,11,5,upstairs.ogg,
+SE,5,0,upstairs.ogg,
+SE,6,0,upstairs.ogg,
+SE,6,4,upstairs.ogg,
+
+# MOVE, マスX座標, マスY座標, 侵入方向, 移動先マップ, 移動先マスX座標, 移動先マスY座標
+MOVE,5,9,0,field,5,6
+MOVE,6,9,0,field,5,6
+MOVE,0,4,1,field,4,5
+MOVE,0,5,1,field,4,5
+MOVE,11,4,2,field,6,5
+MOVE,11,5,2,field,6,5
+MOVE,5,0,3,field,5,4
+MOVE,6,0,3,field,5,4
+MOVE,6,4,0,field4,5,3
+MOVE,6,4,1,field4,5,3
+MOVE,6,4,2,field4,5,3
+MOVE,6,4,3,field4,5,3
+
+# CHARA, キャラクター名, マスX座標, マスY座標, 向き, 移動不可, メッセージ 
+CHARA,white_cat,2,2,0,1,にゃーにゃー
+
+# TREASURE, アイテムID, マスX座標, マスY座標, 中身
+TREASURE,0,8,7,おなべのふた
+TREASURE,1,9,7,薬草
+
+
