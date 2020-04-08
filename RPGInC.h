@@ -159,6 +159,8 @@ int convert_int_to_full_width_char(int, char *);
 SDL_Window *window = NULL;
 SDL_Renderer *renderer = NULL;
 TTF_Font *font = NULL;
+TTF_Font *title_font = NULL;
+TTF_Font *main_title_font = NULL;
 Mix_Music *music = NULL;
 
 const int SCREEN_WIDTH = 640;

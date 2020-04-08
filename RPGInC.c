@@ -15,7 +15,7 @@ int main (int argc, char *argv[]) {
         return 1;
     }
 
-    window = SDL_CreateWindow( "DRAW IMAGE TEST", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN );
+    window = SDL_CreateWindow( "CHIHA QUEST", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN );
     if( window == NULL ) {
         printf( "Window could not be created! SDL_Error: %s\n", SDL_GetError() );
         return 1;
@@ -81,6 +81,79 @@ int main (int argc, char *argv[]) {
     Mix_VolumeMusic(10);
     Mix_PlayingMusic();
     //
+
+    // title window
+    main_title_font = TTF_OpenFont(FONT_PATH, FONT_SIZE*6);
+    if ( main_title_font == NULL ) {
+        printf("TTF_OpenFont: %s\n", TTF_GetError());
+    }
+
+    title_font = TTF_OpenFont(FONT_PATH, FONT_SIZE*2);
+    if ( title_font == NULL ) {
+        printf("TTF_OpenFont: %s\n", TTF_GetError());
+    }
+
+    int START_POSITION_X = (SCREEN_WIDTH / 5) * 2;
+    int START_POSITION_Y = SCREEN_HEIGHT - 100;
+    int OPTION_POSITION_X = (SCREEN_WIDTH / 5) * 2;
+    int OPTION_POSITION_Y = SCREEN_HEIGHT - 68;
+
+    int t_triangle_x1 = START_POSITION_X - 38;
+    int t_triangle_y1 = SCREEN_HEIGHT - 96;
+    int t_triangle_x2 = START_POSITION_X - 10;
+    int t_triangle_y2 = SCREEN_HEIGHT - 82;
+    int t_triangle_x3 = t_triangle_x1;
+    int t_triangle_y3 = SCREEN_HEIGHT - 68;
+
+    STATE start_flg = ON;
+
+    while (1) {
+        SDL_Event e;
+
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        SDL_Rect rectangle;
+
+        rectangle.x = 0;
+        rectangle.y = 0;
+        rectangle.w = SCREEN_WIDTH;
+        rectangle.h = SCREEN_HEIGHT;
+        SDL_RenderFillRect(renderer, &rectangle);
+
+        display_character_string(renderer, main_title_font, "CHIHARU QUEST", 10, 80,  1);
+        display_character_string(renderer, title_font, "START", START_POSITION_X, SCREEN_HEIGHT - 100,  1);
+        display_character_string(renderer, title_font, "OPTION", START_POSITION_X, SCREEN_HEIGHT - 68,  1);
+
+        make_triangle(renderer, t_triangle_x1, t_triangle_y1,
+                                t_triangle_x2, t_triangle_y2,
+                                t_triangle_x3, t_triangle_y3,
+                                255, 255, 255, 255, 1);
+
+        SDL_RenderPresent(renderer);
+
+        // event handling
+        if ( SDL_PollEvent(&e) ) {
+            if (e.type == SDL_QUIT){
+                break;
+            } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_UP){
+                t_triangle_y1 = SCREEN_HEIGHT - 96;
+                t_triangle_y2 = SCREEN_HEIGHT - 82;
+                t_triangle_y3 = SCREEN_HEIGHT - 68;
+
+		start_flg = ON;
+            } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_DOWN){
+                t_triangle_y1 = SCREEN_HEIGHT - 64;
+                t_triangle_y2 = SCREEN_HEIGHT - 50;
+                t_triangle_y3 = SCREEN_HEIGHT - 36;
+
+		start_flg = OFF;
+            } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SPACE){
+                if (start_flg == ON){
+		    start_flg = OFF;
+                    break;
+                }
+            }
+        }
+    }
 
     // main loop
     while (1) {
