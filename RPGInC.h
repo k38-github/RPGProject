@@ -13,25 +13,26 @@ typedef enum {OUT_VISIBLE, IN_VISIBLE} VISIBLE;
 typedef enum {OFF, ON} STATE;
 typedef enum {TALK, MEMORY, STATUS, EQUIPMENT, OPEN, SPELL, SKILL, TOOLS, TACTICS, SEARCH} COMMAND_STATUS;
 typedef enum {HP_AND_MP, OFFENSIVE_POWER, CONFIRM_STATUS} STATUS_STATUS;
+typedef enum {NORMAL, BATTLE_SELECT, BATTLE_ACTION, ESCAPE, ATTACK, DEFENSE, ITEM} BATTLE_STATUS;
 
 
 typedef struct {
-    char *name;
-    int   sex;
-    int   level;
-    int   hp;
-    int   mp;
-    int   strength;
-    int   agility;
-    int   protection;
-    int   wisdom;
-    int   luck;
-    int   max_hp;
-    int   max_mp;
-    int   offensive_power;
-    int   defensive_power;
-    int   skill_point;
-    int   experience_point;
+    char name[256];
+    int sex;
+    int level;
+    int hp;
+    int mp;
+    int strength;
+    int agility;
+    int protection;
+    int wisdom;
+    int luck;
+    int max_hp;
+    int max_mp;
+    int offensive_power;
+    int defensive_power;
+    int skill_point;
+    int experience_point;
 } CHARACTER_STATUS;
 
 typedef struct {
@@ -54,6 +55,29 @@ typedef struct {
     SDL_Texture *npc_image;
     MOVING npc_move;
 } NPC;
+
+typedef struct {
+// ID, モンスター名, 性別, レベル, HP, MP, 攻撃力, 素早さ, 防御力, 賢さ, 運
+// スキル1, スキル2, スキル3, スキル4, スキル5
+// アイテム1, 確率, アイテム2, 確率, アイテム3, 確率, 取得ゴールド, 取得経験値, 出現確率
+
+    int monster_id;
+    char skill1[256];
+    char skill2[256];
+    char skill3[256];
+    char skill4[256];
+    char skill5[256];
+    char item1[256];
+    double item1_probability;
+    char item2[256];
+    double item2_probability;
+    char item3[256];
+    double item3_probability;
+    int gold;
+    double encounter_probability;
+    CHARACTER_STATUS status;
+
+} MONSTER;
 
 typedef struct {
     int mapchip_id;
@@ -102,6 +126,13 @@ int npc_animation(SDL_Renderer *);
 int npc_update(SDL_Renderer *renderer, int);
 int npc_move(DIRECTION, int);
 
+int load_monster(SDL_Renderer *);
+int load_monster_status(char *, int, int);
+
+int battle_window(SDL_Renderer *, SDL_Event, MONSTER);
+int battle_encount(SDL_Renderer *, SDL_Event);
+int draw_monster(SDL_Renderer *, char *path, int);
+
 int load_map_image(SDL_Renderer *, SDL_Texture **);
 int load_mapchip(SDL_Renderer *);
 int load_move(SDL_Renderer *, SDL_Texture *);
@@ -138,12 +169,14 @@ int make_commands_window(SDL_Renderer *, TTF_Font *, SDL_Event);
 int check_command_status(COMMAND_STATUS *, int, int);
 int get_command_triangle(int *, int *, int *, int *, int *, int *);
 
+int make_commands_back_window(SDL_Renderer *, TTF_Font *, SDL_Event);
 int make_status_window(SDL_Renderer *, TTF_Font *, SDL_Event);
 int check_status_status(STATUS_STATUS *, int, int);
 int get_status_triangle(int *, int *, int *, int *, int *, int *);
 
 int make_hp_and_mp_window(SDL_Renderer *, TTF_Font *, SDL_Event);
 int convert_int_to_full_width_char(int, char *);
+int convert_int_to_alphabet(int, char *);
 
 /*** message list ***/
 #define TALK_MESSAGE "そっちには　だれも　いないよ。"
@@ -151,6 +184,7 @@ int convert_int_to_full_width_char(int, char *);
 #define TRESUREBOX_MESSAGE "　をてにいれた！"
 #define TRESUREBOX_EMPTY_MESSAGE "からっぽ！"
 #define DOOR_MESSAGE "そのほうこうに　とびらは　ないよ!"
+#define ENCOUNT_MESSAGE "　があらわれた！"
 
 /*** Initialize value ***/
 
@@ -158,6 +192,7 @@ int convert_int_to_full_width_char(int, char *);
 
 SDL_Window *window = NULL;
 SDL_Renderer *renderer = NULL;
+SDL_Texture *player_image = NULL;
 TTF_Font *font = NULL;
 TTF_Font *title_font = NULL;
 TTF_Font *main_title_font = NULL;
@@ -180,9 +215,11 @@ int speed = 2;
 int frame = 0;
 int number_of_map_image = 0;
 int number_of_npc_image = 0;
+int number_of_monster = 0;
 
 CARACTER player = {1, 1, 32, 32, 0, 0, 0, 0, DOWN, FALSE};
 NPC npc[256] = {0};
+MONSTER monster[256] = {0};
 
 TREASURE_FRAME treasure[256] = {0};
 DOOR door[256] = {0};
@@ -197,13 +234,17 @@ WINDOW command_window = {16, 16, 216, 160, 255, OUT_VISIBLE};
 WINDOW status_window = {32, 32, 170, 135, 255, OUT_VISIBLE};
 WINDOW hp_and_mp_window = {48, 48, 170, 220, 255, OUT_VISIBLE};
 
+WINDOW battle_back_window = {-10, 100, 660, 238, 255, OUT_VISIBLE};
+WINDOW battle_status_window = {64, 20, 120, 140, 255, OUT_VISIBLE};
+WINDOW battle_select_window = {64, 314, 140, 60, 255, OUT_VISIBLE};
+WINDOW battle_action_window = {64, 290, 140, 105, 255, OUT_VISIBLE};
+WINDOW battle_enemy_window = {204, 314, 380, 40, 255, OUT_VISIBLE};
+
 char *message = SEARCH_MESSAGE;
 
 STATE state = OFF;
 STATE debug_state = OFF;
 COMMAND_STATUS command_status = TALK;
 STATUS_STATUS status_status = HP_AND_MP;
-
-int back_flg = 0;
 
 #endif

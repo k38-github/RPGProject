@@ -612,16 +612,20 @@ int load_mapchip(SDL_Renderer *renderer) {
     }
 
     for(i = 0;fgets(buf, sizeof(buf), fp) != NULL;i++){
-        sscanf(buf, "%d,%[^,],%d,%d", &x, n, &y, &z);
-        mapchip[i].mapchip_id = x;
-        strcpy(mapchip[i].mapchip_name, n);
-        mapchip[i].movable = y;
-        mapchip[i].change_locate = z;
+        if (strncmp(buf, "#", 1) != 0){
+            sscanf(buf, "%d,%[^,],%d,%d", &x, n, &y, &z);
+            mapchip[i].mapchip_id = x;
+            strcpy(mapchip[i].mapchip_name, n);
+            mapchip[i].movable = y;
+            mapchip[i].change_locate = z;
 
-        sprintf(path, "image/mapchip/%s.bmp", mapchip[i].mapchip_name);
-        load_image(renderer, &mapchip[i].map_image, path);
+            sprintf(path, "image/mapchip/%s.bmp", mapchip[i].mapchip_name);
+            load_image(renderer, &mapchip[i].map_image, path);
 
-        pallet_array[i] = x;
+            pallet_array[i] = x;
+	} else {
+            i--;
+	}
     }
 
     number_of_map_image = i - 1;
