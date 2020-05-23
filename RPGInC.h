@@ -13,7 +13,8 @@ typedef enum {OUT_VISIBLE, IN_VISIBLE} VISIBLE;
 typedef enum {OFF, ON} STATE;
 typedef enum {TALK, MEMORY, STATUS, EQUIPMENT, OPEN, SPELL, SKILL, TOOLS, TACTICS, SEARCH} COMMAND_STATUS;
 typedef enum {HP_AND_MP, OFFENSIVE_POWER, CONFIRM_STATUS} STATUS_STATUS;
-typedef enum {NORMAL, BATTLE_SELECT, BATTLE_ACTION, ESCAPE, ATTACK, DEFENSE, ITEM} BATTLE_STATUS;
+typedef enum {NORMAL, BATTLE_SELECT, BATTLE_ACTION, ESCAPE, ATTACK, DEFENSE, ITEM, BATTLE_END} BATTLE_STATUS;
+typedef enum {ENEMY_POS_1, ENEMY_POS_2, ENEMY_POS_3, ENEMY_POS_4, ENEMY_POS_5} ENEMY_POS;
 
 
 typedef struct {
@@ -131,7 +132,7 @@ int load_monster_status(char *, int, int);
 
 int battle_window(SDL_Renderer *, SDL_Event, MONSTER);
 int battle_encount(SDL_Renderer *, SDL_Event);
-int draw_monster(SDL_Renderer *, char *path, int);
+int draw_monster(SDL_Renderer *, char *, int, MONSTER *);
 
 int load_map_image(SDL_Renderer *, SDL_Texture **);
 int load_mapchip(SDL_Renderer *);
@@ -177,6 +178,7 @@ int get_status_triangle(int *, int *, int *, int *, int *, int *);
 int make_hp_and_mp_window(SDL_Renderer *, TTF_Font *, SDL_Event);
 int convert_int_to_full_width_char(int, char *);
 int convert_int_to_alphabet(int, char *);
+int knock_out_monster(SDL_Renderer *, int, int);
 
 /*** message list ***/
 #define TALK_MESSAGE "そっちには　だれも　いないよ。"
@@ -244,6 +246,7 @@ char *message = SEARCH_MESSAGE;
 
 STATE state = OFF;
 STATE debug_state = OFF;
+STATE flash_triangle_status = ON;
 COMMAND_STATUS command_status = TALK;
 STATUS_STATUS status_status = HP_AND_MP;
 

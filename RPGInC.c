@@ -842,73 +842,180 @@ int battle_encount(SDL_Renderer *renderer, SDL_Event e) {
     return 0;
 }
 
-int draw_monster(SDL_Renderer *renderer, char *path, int num_of_monster) {
+int draw_monster(SDL_Renderer *renderer, char *path, int num_of_monster, MONSTER *monster) {
 
     SDL_Texture *monster_image = NULL;
     load_image(renderer, &monster_image, path);
 
     SDL_Rect imageRect;
     SDL_Rect drawRect;
+
+
     if (num_of_monster == 1) {
-        imageRect=(SDL_Rect){0, 0, 32, 32};
-        drawRect=(SDL_Rect){300, 200, 64, 64};
+        if (monster[0].status.hp != 0) {
+            imageRect=(SDL_Rect){0, 0, 32, 32};
+            drawRect=(SDL_Rect){300, 200, 64, 64};
 
-        SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
-    } else if (num_of_monster == 2) {
-        imageRect=(SDL_Rect){0, 0, 32, 32};
-        drawRect=(SDL_Rect){236, 200, 64, 64};
+            SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
+	}
+    } else if (num_of_monster == 2) { 
+        if (monster[0].status.hp != 0) {
+            imageRect=(SDL_Rect){0, 0, 32, 32};
+            drawRect=(SDL_Rect){236, 200, 64, 64};
+            SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
+	}
 
-        SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
-
-        drawRect=(SDL_Rect){364, 200, 64, 64};
-        SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
+        if (monster[1].status.hp != 0) {
+            imageRect=(SDL_Rect){0, 0, 32, 32};
+            drawRect=(SDL_Rect){364, 200, 64, 64};
+            SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
+	}
     } else if (num_of_monster == 3) {
-        imageRect=(SDL_Rect){0, 0, 32, 32};
-        drawRect=(SDL_Rect){236, 200, 64, 64};
-        SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
+        if (monster[0].status.hp != 0) {
+            imageRect=(SDL_Rect){0, 0, 32, 32};
+            drawRect=(SDL_Rect){236, 200, 64, 64};
+            SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
+	}
 
-        drawRect=(SDL_Rect){300, 200, 64, 64};
-        SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
+        if (monster[1].status.hp != 0) {
+            imageRect=(SDL_Rect){0, 0, 32, 32};
+            drawRect=(SDL_Rect){300, 200, 64, 64};
+            SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
+	}
 
-        drawRect=(SDL_Rect){364, 200, 64, 64};
-        SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
+        if (monster[2].status.hp != 0) {
+            imageRect=(SDL_Rect){0, 0, 32, 32};
+            drawRect=(SDL_Rect){364, 200, 64, 64};
+            SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
+	}
 
     } else if (num_of_monster == 4) {
-        imageRect=(SDL_Rect){0, 0, 32, 32};
-        drawRect=(SDL_Rect){172, 200, 64, 64};
-        SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
+        if (monster[0].status.hp != 0) {
+            imageRect=(SDL_Rect){0, 0, 32, 32};
+            drawRect=(SDL_Rect){172, 200, 64, 64};
+            SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
+        }
 
-        drawRect=(SDL_Rect){236, 200, 64, 64};
-        SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
+        if (monster[1].status.hp != 0) {
+            imageRect=(SDL_Rect){0, 0, 32, 32};
+            drawRect=(SDL_Rect){236, 200, 64, 64};
+            SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
+        }
 
-        drawRect=(SDL_Rect){300, 200, 64, 64};
-        SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
+        if (monster[2].status.hp != 0) {
+            imageRect=(SDL_Rect){0, 0, 32, 32};
+            drawRect=(SDL_Rect){300, 200, 64, 64};
+            SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
+        }
 
-        drawRect=(SDL_Rect){364, 200, 64, 64};
-        SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
+        if (monster[3].status.hp != 0) {
+            imageRect=(SDL_Rect){0, 0, 32, 32};
+            drawRect=(SDL_Rect){364, 200, 64, 64};
+            SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
+        }
 
     } else if (num_of_monster == 5) {
-        imageRect=(SDL_Rect){0, 0, 32, 32};
-        drawRect=(SDL_Rect){172, 200, 64, 64};
-        SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
+        if (monster[0].status.hp != 0) {
+            imageRect=(SDL_Rect){0, 0, 32, 32};
+            drawRect=(SDL_Rect){172, 200, 64, 64};
+            SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
+        }
 
-        drawRect=(SDL_Rect){236, 200, 64, 64};
-        SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
+        if (monster[1].status.hp != 0) {
+            imageRect=(SDL_Rect){0, 0, 32, 32};
+            drawRect=(SDL_Rect){236, 200, 64, 64};
+            SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
+        }
 
-        drawRect=(SDL_Rect){300, 200, 64, 64};
-        SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
+        if (monster[2].status.hp != 0) {
+            imageRect=(SDL_Rect){0, 0, 32, 32};
+            drawRect=(SDL_Rect){300, 200, 64, 64};
+            SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
+        }
 
-        drawRect=(SDL_Rect){364, 200, 64, 64};
-        SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
+        if (monster[3].status.hp != 0) {
+            imageRect=(SDL_Rect){0, 0, 32, 32};
+            drawRect=(SDL_Rect){364, 200, 64, 64};
+            SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
+        }
 
-        drawRect=(SDL_Rect){428, 200, 64, 64};
-        SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
+        if (monster[4].status.hp != 0) {
+            imageRect=(SDL_Rect){0, 0, 32, 32};
+            drawRect=(SDL_Rect){428, 200, 64, 64};
+            SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
+        }
 
     }
 
-
     return 0;
 
+}
+
+int knock_out_monster(SDL_Renderer *renderer, int num_of_monster, int enemy_pos) {
+
+    if (num_of_monster == 1) {
+        make_box(renderer, 300, 200, 64, 64, 255, 0, 0, 0);
+    } else if (num_of_monster == 2) { 
+        if (enemy_pos == ENEMY_POS_1) {
+            make_box(renderer, 236, 200, 64, 64, 255, 0, 0, 0);
+        }
+    
+        if (enemy_pos == ENEMY_POS_2) {
+            make_box(renderer, 364, 200, 64, 64, 255, 0, 0, 0);
+        }
+    } else if (num_of_monster == 3) {
+        if (enemy_pos == ENEMY_POS_1) {
+            make_box(renderer, 236, 200, 64, 64, 255, 0, 0, 0);
+        }
+    
+        if (enemy_pos == ENEMY_POS_2) {
+            make_box(renderer, 300, 200, 64, 64, 255, 0, 0, 0);
+        }
+    
+        if (enemy_pos == ENEMY_POS_3) {
+            make_box(renderer, 364, 200, 64, 64, 255, 0, 0, 0);
+        }
+    } else if (num_of_monster == 4) {
+        if (enemy_pos == ENEMY_POS_1) {
+            make_box(renderer, 172, 200, 64, 64, 255, 0, 0, 0);
+        }
+    
+        if (enemy_pos == ENEMY_POS_2) {
+            make_box(renderer, 236, 200, 64, 64, 255, 0, 0, 0);
+        }
+    
+        if (enemy_pos == ENEMY_POS_3) {
+            make_box(renderer, 300, 200, 64, 64, 255, 0, 0, 0);
+        }
+    
+        if (enemy_pos == ENEMY_POS_4) {
+            make_box(renderer, 364, 200, 64, 64, 255, 0, 0, 0);
+        }
+    } else if (num_of_monster == 5) {
+        if (enemy_pos == ENEMY_POS_1) {
+            make_box(renderer, 172, 200, 64, 64, 255, 0, 0, 0);
+        }
+    
+        if (enemy_pos == ENEMY_POS_2) {
+            make_box(renderer, 236, 200, 64, 64, 255, 0, 0, 0);
+        }
+    
+        if (enemy_pos == ENEMY_POS_3) {
+            make_box(renderer, 300, 200, 64, 64, 255, 0, 0, 0);
+        }
+    
+        if (enemy_pos == ENEMY_POS_4) {
+            make_box(renderer, 364, 200, 64, 64, 255, 0, 0, 0);
+        }
+    
+        if (enemy_pos == ENEMY_POS_5) {
+            make_box(renderer, 428, 200, 64, 64, 255, 0, 0, 0);
+        }
+    }
+    
+    SDL_RenderPresent(renderer);
+
+    return 0;
 }
 
 int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
@@ -943,7 +1050,7 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
     int defense = triangle_y1 + 21;
     int item = triangle_y1 + 42;
 	    
-    char mes_buf[300] = {0};
+    char mes_buf[1000] = {0};
     char monster_buf[10] = {0};
 
     BATTLE_STATUS battle_status = NORMAL;
@@ -966,8 +1073,6 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
 
     printf("num_of_monster: %d\n", num_of_monster);
 
-    draw_monster(renderer, path, num_of_monster);
-
     int rectangle_h = battle_enemy_window.rectangle_h;
     battle_enemy_window.rectangle_h = battle_enemy_window.rectangle_h + ((num_of_monster - 1) * 21);
 
@@ -984,6 +1089,8 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
         printf("monster %d: %s %d\n", i, monster_object[i].status.name, monster_object[i].status.agility);
     }
 
+    draw_monster(renderer, path, num_of_monster, monster_object);
+
     SDL_RenderPresent(renderer);
 
     SDL_Delay(1500);
@@ -999,7 +1106,7 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
 
         make_window(renderer, battle_back_window);
         make_window(renderer, battle_status_window);
-        draw_monster(renderer, path, num_of_monster);
+        draw_monster(renderer, path, num_of_monster, monster_object);
 
         display_character_string(renderer, font, player.status.name, 95.0, 30.0, 1);
 
@@ -1103,8 +1210,83 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
 
         } else if (battle_status == ATTACK) {
             // decide the attack order
-	    char *order = malloc(sizeof(monster.status.name)*num_of_monster + sizeof(player.status.name));
+	    int j = 0;
+	    int order[5] = {0};
+
+	    ENEMY_POS enemy_pos = ENEMY_POS_1;
+
+	    flash_triangle_status = OFF;
+
             printf("attack:%d\n", attack);
+
+            for(i=0;i<num_of_monster;i++){
+                if(monster_object[i].status.hp != 0) {
+                    order[j] = i;
+		    j++;
+		}
+            }
+
+            if (attack == 324) {
+                enemy_pos = ENEMY_POS_1;
+            } else if (attack == 345) {
+                enemy_pos = ENEMY_POS_2;
+            } else if (attack == 366) {
+                enemy_pos = ENEMY_POS_3;
+            } else if (attack == 387) {
+                enemy_pos = ENEMY_POS_4;
+            } else if (attack == 408) {
+                enemy_pos = ENEMY_POS_5;
+            }
+
+            strcpy(mes_buf, "\0");
+
+            state = ON;
+            message_window_status();
+
+            sprintf(mes_buf,"%sの　こうげき！  %sに　%sの　ダメージ！！", 
+			    player.status.name, monster_object[order[enemy_pos]].status.name, "５");
+
+            monster_object[order[enemy_pos]].status.hp = monster_object[order[enemy_pos]].status.hp - 5;
+
+            if (monster_object[order[enemy_pos]].status.hp <= 0) {
+                message = mes_buf;
+                window_update(renderer, font, e);
+
+		knock_out_monster(renderer, num_of_monster, order[enemy_pos]);
+		SDL_Delay(300);
+
+		printf("taoshita: %s\n", monster_object[order[enemy_pos]].status.name);
+                strcpy(mes_buf, "\0");
+                sprintf(mes_buf, "%sを　たおした！", monster_object[order[enemy_pos]].status.name);
+                battle_enemy_window.rectangle_h = battle_enemy_window.rectangle_h - 21;
+
+                state = ON;
+                message_window_status();
+            }
+
+            message = mes_buf;
+            window_update(renderer, font, e);
+
+            for(i=0;i<num_of_monster;i++){
+                if(monster_object[i].status.hp > 0) {
+                    battle_status = NORMAL;
+		}
+            }
+
+	    if (battle_status == ATTACK) {
+	        flash_triangle_status = ON;
+                battle_status = BATTLE_END;
+            }
+	    
+
+
+            triangle_x1 = 74;
+            triangle_y1 = 324;
+            triangle_x2 = 89;
+            triangle_y2 = 334;
+            triangle_x3 = 74;
+            triangle_y3 = 344;
+
         } else if (battle_status == DEFENSE) {
             strcpy(mes_buf, "\0");
 
@@ -1150,6 +1332,18 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
 		    battle_status = NORMAL;
 		}
             }
+        } else if (battle_status == BATTLE_END) {
+            printf("battle_end\n");
+            strcpy(mes_buf, "\0");
+
+            state = ON;
+            message_window_status();
+
+            strncat(mes_buf, player.status.name, 30);
+            message = strcat(monster.status.name, "をたおした！");
+            window_update(renderer, font, e);
+
+            break;
         }
 
         SDL_RenderPresent(renderer);
@@ -1922,17 +2116,22 @@ int message_engine(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
         loop_counter++;
     }
 
-    if (message_window.visible == IN_VISIBLE) {
-        while (1) {
-            flash_triangle(renderer);
+    if (flash_triangle_status == ON) {
+        if (message_window.visible == IN_VISIBLE) {
+            while (1) {
+                flash_triangle(renderer);
 
-            if ( SDL_PollEvent(&e) ) {
-                if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SPACE){
-                    message_window.visible = OUT_VISIBLE;
-                    break;
+                if ( SDL_PollEvent(&e) ) {
+                    if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SPACE){
+                        message_window.visible = OUT_VISIBLE;
+                        break;
+                    }
                 }
             }
         }
+    } else {
+        SDL_Delay(500);
+        message_window.visible = OUT_VISIBLE;
     }
 
     return 0;
