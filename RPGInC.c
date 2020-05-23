@@ -1248,24 +1248,22 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
 
             monster_object[order[enemy_pos]].status.hp = monster_object[order[enemy_pos]].status.hp - 5;
 
+            message = mes_buf;
+            window_update(renderer, font, e);
+
             if (monster_object[order[enemy_pos]].status.hp <= 0) {
-                message = mes_buf;
-                window_update(renderer, font, e);
 
 		knock_out_monster(renderer, num_of_monster, order[enemy_pos]);
-		SDL_Delay(300);
+		SDL_Delay(400);
 
 		printf("taoshita: %s\n", monster_object[order[enemy_pos]].status.name);
                 strcpy(mes_buf, "\0");
-                sprintf(mes_buf, "%sを　たおした！", monster_object[order[enemy_pos]].status.name);
+                sprintf(mes_buf, "    %sを　たおした！", monster_object[order[enemy_pos]].status.name);
                 battle_enemy_window.rectangle_h = battle_enemy_window.rectangle_h - 21;
 
-                state = ON;
-                message_window_status();
+		message = mes_buf;
+                message_engine(renderer, font, e);
             }
-
-            message = mes_buf;
-            window_update(renderer, font, e);
 
             for(i=0;i<num_of_monster;i++){
                 if(monster_object[i].status.hp > 0) {
@@ -2130,7 +2128,7 @@ int message_engine(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
             }
         }
     } else {
-        SDL_Delay(500);
+        SDL_Delay(600);
         message_window.visible = OUT_VISIBLE;
     }
 
