@@ -139,18 +139,18 @@ int main (int argc, char *argv[]) {
                 t_triangle_y2 = SCREEN_HEIGHT - 82;
                 t_triangle_y3 = SCREEN_HEIGHT - 68;
 
-		start_flg = ON;
+                start_flg = ON;
             } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_DOWN){
                 t_triangle_y1 = SCREEN_HEIGHT - 64;
                 t_triangle_y2 = SCREEN_HEIGHT - 50;
                 t_triangle_y3 = SCREEN_HEIGHT - 36;
 
-		start_flg = OFF;
+                start_flg = OFF;
             } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SPACE){
                 if (start_flg == ON){
-		    start_flg = OFF;
+                    start_flg = OFF;
                     sprintf(MAP_EVENT_NAME, "%s", "field");
-		    load_bgm();
+                    load_bgm();
                     break;
                 }
             }
@@ -281,7 +281,7 @@ int player_update(SDL_Renderer *renderer, SDL_Event e, SDL_Texture *player_image
 
             load_move(renderer, player_image);
 
-	    if (number_of_monster != 0) {
+            if (number_of_monster != 0) {
                 battle_encount(renderer, e);
             }
 
@@ -336,11 +336,11 @@ int player_move(SDL_Event e) {
 int set_player_status() {
     strcpy(player.status.name, "ちはる");
     player.status.level = 1;
-    player.status.hp = 20;
-    player.status.mp = 5;
-    player.status.max_hp = 20;
+    player.status.hp = 35;
+    player.status.mp = 20;
+    player.status.max_hp = 35;
     player.status.max_mp = 20;
-    player.status.max_mp = 20;
+    player.status.strength = 15;
     player.status.agility = 3;
     player.status.protection = 10;
 
@@ -402,7 +402,7 @@ int load_monster(SDL_Renderer *renderer) {
                 sscanf(buf, "%[^,],%[^,],%d", event, monster_name, &monster_id);
 
                 load_monster_status(monster_name, monster_id, element_number);
-		element_number++;
+                element_number++;
             }
         }
 
@@ -809,7 +809,7 @@ int load_move(SDL_Renderer *renderer, SDL_Texture *player_image) {
                         player.pixel_y = player.map_y * GRID_SIZE;
 
                         load_npc(renderer);
-			load_monster(renderer);
+                        load_monster(renderer);
 
                         fade_out(renderer, player_image);
 
@@ -852,94 +852,94 @@ int draw_monster(SDL_Renderer *renderer, char *path, int num_of_monster, MONSTER
 
 
     if (num_of_monster == 1) {
-        if (monster[0].status.hp != 0) {
+        if (0 < monster[0].status.hp) {
             imageRect=(SDL_Rect){0, 0, 32, 32};
             drawRect=(SDL_Rect){300, 200, 64, 64};
 
             SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
-	}
+        }
     } else if (num_of_monster == 2) { 
-        if (monster[0].status.hp != 0) {
+        if (0 < monster[0].status.hp) {
             imageRect=(SDL_Rect){0, 0, 32, 32};
             drawRect=(SDL_Rect){236, 200, 64, 64};
             SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
-	}
+        }
 
-        if (monster[1].status.hp != 0) {
+        if (0 < monster[1].status.hp) {
             imageRect=(SDL_Rect){0, 0, 32, 32};
             drawRect=(SDL_Rect){364, 200, 64, 64};
             SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
-	}
+        }
     } else if (num_of_monster == 3) {
-        if (monster[0].status.hp != 0) {
+        if (0 < monster[0].status.hp) {
             imageRect=(SDL_Rect){0, 0, 32, 32};
             drawRect=(SDL_Rect){236, 200, 64, 64};
             SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
-	}
+        }
 
-        if (monster[1].status.hp != 0) {
+        if (0 < monster[1].status.hp) {
             imageRect=(SDL_Rect){0, 0, 32, 32};
             drawRect=(SDL_Rect){300, 200, 64, 64};
             SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
-	}
+        }
 
-        if (monster[2].status.hp != 0) {
+        if (0 < monster[2].status.hp) {
             imageRect=(SDL_Rect){0, 0, 32, 32};
             drawRect=(SDL_Rect){364, 200, 64, 64};
             SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
-	}
+        }
 
     } else if (num_of_monster == 4) {
-        if (monster[0].status.hp != 0) {
+        if (0 < monster[0].status.hp) {
             imageRect=(SDL_Rect){0, 0, 32, 32};
             drawRect=(SDL_Rect){172, 200, 64, 64};
             SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
         }
 
-        if (monster[1].status.hp != 0) {
+        if (0 < monster[1].status.hp) {
             imageRect=(SDL_Rect){0, 0, 32, 32};
             drawRect=(SDL_Rect){236, 200, 64, 64};
             SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
         }
 
-        if (monster[2].status.hp != 0) {
+        if (0 < monster[2].status.hp) {
             imageRect=(SDL_Rect){0, 0, 32, 32};
             drawRect=(SDL_Rect){300, 200, 64, 64};
             SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
         }
 
-        if (monster[3].status.hp != 0) {
+        if (0 < monster[3].status.hp) {
             imageRect=(SDL_Rect){0, 0, 32, 32};
             drawRect=(SDL_Rect){364, 200, 64, 64};
             SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
         }
 
     } else if (num_of_monster == 5) {
-        if (monster[0].status.hp != 0) {
+        if (0 < monster[0].status.hp) {
             imageRect=(SDL_Rect){0, 0, 32, 32};
             drawRect=(SDL_Rect){172, 200, 64, 64};
             SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
         }
 
-        if (monster[1].status.hp != 0) {
+        if (0 < monster[1].status.hp) {
             imageRect=(SDL_Rect){0, 0, 32, 32};
             drawRect=(SDL_Rect){236, 200, 64, 64};
             SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
         }
 
-        if (monster[2].status.hp != 0) {
+        if (0 < monster[2].status.hp) {
             imageRect=(SDL_Rect){0, 0, 32, 32};
             drawRect=(SDL_Rect){300, 200, 64, 64};
             SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
         }
 
-        if (monster[3].status.hp != 0) {
+        if (0 < monster[3].status.hp) {
             imageRect=(SDL_Rect){0, 0, 32, 32};
             drawRect=(SDL_Rect){364, 200, 64, 64};
             SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
         }
 
-        if (monster[4].status.hp != 0) {
+        if (0 < monster[4].status.hp) {
             imageRect=(SDL_Rect){0, 0, 32, 32};
             drawRect=(SDL_Rect){428, 200, 64, 64};
             SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
@@ -1018,6 +1018,35 @@ int knock_out_monster(SDL_Renderer *renderer, int num_of_monster, int enemy_pos)
     return 0;
 }
 
+int create_battle_status_window(SDL_Renderer *renderer) {
+
+    char hp[10] = {0};
+    char mp[10] = {0};
+    char level[10] = {0};
+
+    make_window(renderer, battle_status_window);
+
+    display_character_string(renderer, font, player.status.name, 95.0, 30.0, 1);
+
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
+    SDL_RenderDrawLine(renderer, 64, 55, 180, 55);
+
+    display_character_string(renderer, font, "Ｈ", 74.0, 65.0, 1);
+    convert_int_to_full_width_char(player.status.hp, hp);
+    display_character_string(renderer, font, hp, 110.0, 65.0, 1);
+
+    display_character_string(renderer, font, "Ｍ", 74.0, 95.0, 1);
+    convert_int_to_full_width_char(player.status.mp, mp);
+    display_character_string(renderer, font, mp, 110.0, 95.0, 1);
+
+    display_character_string(renderer, font, "lv：", 74.0, 125.0, 1);
+    convert_int_to_full_width_char(player.status.level, level);
+    display_character_string(renderer, font, level, 110.0, 125.0, 1);
+
+
+    return 0;
+}
+
 int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
 
     int i;
@@ -1027,10 +1056,6 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
     char path[300] = {0};
     char monster_name[300] = {0};
     char map_event_name_save[256] = {0};
-
-    char hp[10] = {0};
-    char mp[10] = {0};
-    char level[10] = {0};
 
     int triangle_x1 = 74;
     int triangle_y1 = 324;
@@ -1049,7 +1074,7 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
     int attack = triangle_y1;
     int defense = triangle_y1 + 21;
     int item = triangle_y1 + 42;
-	    
+    
     char mes_buf[1000] = {0};
     char monster_buf[10] = {0};
 
@@ -1069,7 +1094,12 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
     display_character_string(renderer, font, mes_buf, start_x, start_y,  1);
 
     srand((unsigned)time(NULL));
-    int num_of_monster = rand()%5 + 1;
+    int num_of_monster;
+    if (rand()%100+1 < 90) {
+        num_of_monster = rand()%3 + 1;
+    } else {
+        num_of_monster = rand()%5 + 1;
+    }
 
     printf("num_of_monster: %d\n", num_of_monster);
 
@@ -1105,27 +1135,11 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
         npc_animation(renderer);
 
         make_window(renderer, battle_back_window);
-        make_window(renderer, battle_status_window);
         draw_monster(renderer, path, num_of_monster, monster_object);
 
-        display_character_string(renderer, font, player.status.name, 95.0, 30.0, 1);
+        create_battle_status_window(renderer);
 
-        SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
-        SDL_RenderDrawLine(renderer, 64, 55, 180, 55);
-
-        display_character_string(renderer, font, "Ｈ", 74.0, 65.0, 1);
-        convert_int_to_full_width_char(player.status.hp, hp);
-        display_character_string(renderer, font, hp, 110.0, 65.0, 1);
-
-        display_character_string(renderer, font, "Ｍ", 74.0, 95.0, 1);
-        convert_int_to_full_width_char(player.status.mp, mp);
-        display_character_string(renderer, font, mp, 110.0, 95.0, 1);
-
-        display_character_string(renderer, font, "lv：", 74.0, 125.0, 1);
-        convert_int_to_full_width_char(player.status.level, level);
-        display_character_string(renderer, font, level, 110.0, 125.0, 1);
-
-	if (battle_status == NORMAL) {
+        if (battle_status == NORMAL) {
 
             make_window(renderer, battle_select_window);
             make_window(renderer, battle_enemy_window);
@@ -1137,11 +1151,11 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
             y_pos = 324.0;
 
             for(i=0;i<num_of_monster;i++){
-                if(monster_object[i].status.hp != 0) {
+                if(0 < monster_object[i].status.hp) {
                     display_character_string(renderer, font, monster_object[i].status.name, x_pos, y_pos, 1);
 
-                    y_pos = y_pos + 21;	
-		}
+                    y_pos = y_pos + 21;
+                }
             }
 
 
@@ -1167,11 +1181,11 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
             y_pos = 324.0;
 
             for(i=0;i<num_of_monster;i++){
-                if(monster_object[i].status.hp != 0) {
+                if(0 < monster_object[i].status.hp) {
                     display_character_string(renderer, font, monster_object[i].status.name, x_pos, y_pos, 1);
 
-                    y_pos = y_pos + 21;	
-		}
+                    y_pos = y_pos + 21;
+                }
             }
 
             make_triangle(renderer, triangle_x1, triangle_y1,
@@ -1196,11 +1210,11 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
             y_pos = 324.0;
 
             for(i=0;i<num_of_monster;i++){
-                if(monster_object[i].status.hp != 0) {
+                if(0 < monster_object[i].status.hp) {
                     display_character_string(renderer, font, monster_object[i].status.name, x_pos, y_pos, 1);
 
-                    y_pos = y_pos + 21;	
-		}
+                    y_pos = y_pos + 21;
+                }
             }
 
             make_triangle(renderer, triangle_x1+140, triangle_y1,
@@ -1209,21 +1223,21 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
                                     255, 255, 255, 255, 1);
 
         } else if (battle_status == ATTACK) {
-            // decide the attack order
-	    int j = 0;
-	    int order[5] = {0};
+            int j = 0;
+            int order[5] = {0};
 
-	    ENEMY_POS enemy_pos = ENEMY_POS_1;
+            ENEMY_POS enemy_pos = ENEMY_POS_1;
 
-	    flash_triangle_status = OFF;
+            flash_triangle_status = OFF;
 
             printf("attack:%d\n", attack);
 
             for(i=0;i<num_of_monster;i++){
-                if(monster_object[i].status.hp != 0) {
+                printf("%s %d\n",monster_object[i].status.name, monster_object[i].status.hp);
+                if(0 < monster_object[i].status.hp) {
                     order[j] = i;
-		    j++;
-		}
+                    j++;
+                }
             }
 
             if (attack == 324) {
@@ -1238,44 +1252,140 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
                 enemy_pos = ENEMY_POS_5;
             }
 
-            strcpy(mes_buf, "\0");
+            // decide the attack order
+            MONSTER *monster_sort;
+            monster_sort = malloc(sizeof(MONSTER) * j);
 
-            state = ON;
-            message_window_status();
-
-            sprintf(mes_buf,"%sの　こうげき！  %sに　%sの　ダメージ！！", 
-			    player.status.name, monster_object[order[enemy_pos]].status.name, "５");
-
-            monster_object[order[enemy_pos]].status.hp = monster_object[order[enemy_pos]].status.hp - 5;
-
-            message = mes_buf;
-            window_update(renderer, font, e);
-
-            if (monster_object[order[enemy_pos]].status.hp <= 0) {
-
-		knock_out_monster(renderer, num_of_monster, order[enemy_pos]);
-		SDL_Delay(400);
-
-		printf("taoshita: %s\n", monster_object[order[enemy_pos]].status.name);
-                strcpy(mes_buf, "\0");
-                sprintf(mes_buf, "    %sを　たおした！", monster_object[order[enemy_pos]].status.name);
-                battle_enemy_window.rectangle_h = battle_enemy_window.rectangle_h - 21;
-
-		message = mes_buf;
-                message_engine(renderer, font, e);
+            for (i=0;i<j;i++) {
+                monster_sort[i] = monster_object[order[i]];
+                printf("mo_so: %s\n", monster_sort[i].status.name);
             }
+
+            qsort(monster_sort, sizeof(monster_sort) / sizeof(monster_sort[0]), sizeof(MONSTER), compare_agility);
+
+            int player_damage;
+            int monster_damage;
+            char damage_hull_width[30] = {0};
+
+            srand((unsigned)time(NULL));
+            monster_damage = (player.status.strength - (monster_object[order[enemy_pos]].status.protection / 2)) *
+                             (99 + rand()%55) / 256;
+            if (monster_damage < 0) {
+                monster_damage = 0;
+            }
+
+            srand((unsigned)time(NULL));
+            player_damage = (monster_object[order[enemy_pos]].status.strength - (player.status.protection / 2)) *
+                             (99 + rand()%55) / 256;
+            if (player_damage < 0) {
+                player_damage = 0;
+            }
+
+            printf("monster_damage: %d player_damage: %d\n", monster_damage, player_damage);
+
+            STATE player_attack = OFF;
+            for (i=0;i<j;i++) {
+                printf("sort: %s %d\n", monster_sort[i].status.name, monster_sort[i].status.agility); 
+                if (player_attack == OFF && monster_sort[i].status.agility <= player.status.agility) {
+                    player_attack = ON;
+                    strcpy(mes_buf, "\0");
+
+                    state = ON;
+                    message_window_status();
+
+                    convert_int_to_full_width_char(monster_damage, damage_hull_width);
+                    sprintf(mes_buf,"%sの　こうげき！  %sに　%sの　ダメージ！！", 
+                                   player.status.name, monster_object[order[enemy_pos]].status.name, damage_hull_width);
+
+                    monster_object[order[enemy_pos]].status.hp = monster_object[order[enemy_pos]].status.hp - monster_damage;
+
+                    message = mes_buf;
+                    window_update(renderer, font, e);
+
+                    if (monster_object[order[enemy_pos]].status.hp <= 0) {
+                        int k;
+                        for (k=0;k<j;k++) {
+                            if (strcmp(monster_sort[k].status.name,
+                                       monster_object[order[enemy_pos]].status.name) == 0) {
+                                monster_sort[k].status.hp = 0;
+                            }
+                        }
+
+                        knock_out_monster(renderer, num_of_monster, order[enemy_pos]);
+                        SDL_Delay(400);
+
+                        printf("taoshita: %s\n", monster_object[order[enemy_pos]].status.name);
+                        strcpy(mes_buf, "\0");
+                        sprintf(mes_buf, "    %sを　たおした！", monster_object[order[enemy_pos]].status.name);
+                        battle_enemy_window.rectangle_h = battle_enemy_window.rectangle_h - 21;
+
+                        message = mes_buf;
+                        message_engine(renderer, font, e);
+                    }
+
+                    i--;
+                } else {
+                    if (0 < monster_sort[i].status.hp) {
+                        state = ON;
+                        message_window_status();
+
+                        convert_int_to_full_width_char(player_damage, damage_hull_width);
+                        sprintf(mes_buf,"%sの　こうげき！  %sに　%sの　ダメージ！！", 
+                                        monster_sort[i].status.name, player.status.name,  damage_hull_width);
+
+                        player.status.hp = player.status.hp - player_damage;
+
+                        message = mes_buf;
+                        window_update(renderer, font, e);
+
+                        create_battle_status_window(renderer);
+                    }
+
+                }
+            }
+
+            if (player_attack == OFF) {
+                strcpy(mes_buf, "\0");
+
+                state = ON;
+                message_window_status();
+
+                convert_int_to_full_width_char(monster_damage, damage_hull_width);
+                sprintf(mes_buf,"%sの　こうげき！  %sに　%sの　ダメージ！！", 
+                              player.status.name, monster_object[order[enemy_pos]].status.name, damage_hull_width);
+
+                monster_object[order[enemy_pos]].status.hp = monster_object[order[enemy_pos]].status.hp - monster_damage;
+
+                message = mes_buf;
+                window_update(renderer, font, e);
+
+                if (monster_object[order[enemy_pos]].status.hp <= 0) {
+
+                    knock_out_monster(renderer, num_of_monster, order[enemy_pos]);
+                    SDL_Delay(400);
+
+                    strcpy(mes_buf, "\0");
+                    sprintf(mes_buf, "    %sを　たおした！", monster_object[order[enemy_pos]].status.name);
+                    battle_enemy_window.rectangle_h = battle_enemy_window.rectangle_h - 21;
+
+                    message = mes_buf;
+                    message_engine(renderer, font, e);
+                }
+            }
+
+
+            free(monster_sort);
 
             for(i=0;i<num_of_monster;i++){
-                if(monster_object[i].status.hp > 0) {
+                if(0 < monster_object[i].status.hp) {
                     battle_status = NORMAL;
-		}
+                }
             }
 
-	    if (battle_status == ATTACK) {
-	        flash_triangle_status = ON;
+            if (battle_status == ATTACK) {
+                flash_triangle_status = ON;
                 battle_status = BATTLE_END;
             }
-	    
 
 
             triangle_x1 = 74;
@@ -1291,7 +1401,7 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
             state = ON;
             message_window_status();
             player.status.protection = player.status.protection * 1.2;
-	    printf("protection: %d\n", player.status.protection);
+            printf("protection: %d\n", player.status.protection);
 
             strncat(mes_buf, player.status.name, 30);
             message = strcat(mes_buf, "は　みをまもっている！");
@@ -1308,27 +1418,27 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
             state = ON;
             message_window_status();
 
-	    if (monster.status.agility + num_of_monster/10 < player.status.agility) {
+            if (monster.status.agility + num_of_monster/10 < player.status.agility) {
                 strncat(mes_buf, monster_name, 30);
                 message = strcat(mes_buf, "から　にげきれた！");
                 window_update(renderer, font, e);
                 break;
-	    } else {
+            } else {
                 srand((unsigned)time(NULL));
                 int escape = rand()%(abs(monster.status.agility - player.status.agility) + 3);
-		printf("escape:%d %d\n", monster.status.agility, escape + player.status.agility);
+                printf("escape:%d %d\n", monster.status.agility, escape + player.status.agility);
  
-		if ( monster.status.agility + num_of_monster/10 < escape + player.status.agility) {
+                if ( monster.status.agility + num_of_monster/10 < escape + player.status.agility) {
                     strncat(mes_buf, monster_name, 30);
                     message = strcat(mes_buf, "から　にげきれた！");
                     window_update(renderer, font, e);
                     break;
-		} else {
+                } else {
                     strncat(mes_buf, player.status.name, 30);
-	            message = strcat(mes_buf, "はとうそうした!  しかし、まわりこまれてしまった。");
+                    message = strcat(mes_buf, "はとうそうした!  しかし、まわりこまれてしまった。");
                     window_update(renderer, font, e);
-		    battle_status = NORMAL;
-		}
+                    battle_status = NORMAL;
+                }
             }
         } else if (battle_status == BATTLE_END) {
             printf("battle_end\n");
@@ -1360,7 +1470,7 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
 
                 if (battle_status == BATTLE_SELECT) {
                     battle_status = BATTLE_ACTION;
-		} else if (battle_status == BATTLE_ACTION) {
+                } else if (battle_status == BATTLE_ACTION) {
                     battle_status = NORMAL;
                 } else {                    
                     break;
@@ -1384,13 +1494,13 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
                         triangle_y2 = triangle_y2 + 21;
                         triangle_y3 = triangle_y3 + 21;
                     }
-		} else if (battle_status == BATTLE_ACTION) {
+               } else if (battle_status == BATTLE_ACTION) {
                     if (triangle_y3 <= 365) {
                         triangle_y1 = triangle_y1 + 21;
                         triangle_y2 = triangle_y2 + 21;
                         triangle_y3 = triangle_y3 + 21;
                     }
-		} else if (battle_status == BATTLE_SELECT) {
+              } else if (battle_status == BATTLE_SELECT) {
                     if (triangle_y3 <= battle + battle_enemy_window.rectangle_h - 21) {
                         triangle_y1 = triangle_y1 + 21;
                         triangle_y2 = triangle_y2 + 21;
@@ -1410,7 +1520,7 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
                     } else if (triangle_y1 == battle) {
                         battle_status = BATTLE_ACTION;                    
                     }
-		} else if (battle_status == BATTLE_ACTION) {
+           } else if (battle_status == BATTLE_ACTION) {
                     if (triangle_y1 == battle_select) {
                         battle_status = BATTLE_SELECT;                    
                     } else if (triangle_y1 == defense) {
@@ -1418,9 +1528,9 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
                     } else if (triangle_y1 == item) {
                         battle_status = ITEM;                    
                     }
-		} else if (battle_status == BATTLE_SELECT) {
+          } else if (battle_status == BATTLE_SELECT) {
                     battle_status = ATTACK;
-		    attack = triangle_y1;
+                    attack = triangle_y1;
                 }
             }
 
@@ -1434,6 +1544,17 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
 
     return 0;
 }
+
+int compare_agility(const void * n1, const void * n2) {
+    if (((MONSTER *)n1)->status.agility > ((MONSTER *)n2)->status.agility) {
+        return -1;
+    } else if (((MONSTER *)n1)->status.agility < ((MONSTER *)n2)->status.agility) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+    
 
 int fade_out(SDL_Renderer *renderer, SDL_Texture *player_image) {
 
@@ -1778,9 +1899,9 @@ int load_mapchip(SDL_Renderer *renderer) {
 
             sprintf(path, "image/mapchip/%s.bmp", mapchip[i].mapchip_name);
             load_image(renderer, &mapchip[i].map_image, path);
-	} else {
+        } else {
             i--;
-	}
+        }
 
     }
 
@@ -2128,7 +2249,7 @@ int message_engine(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
             }
         }
     } else {
-        SDL_Delay(600);
+        SDL_Delay(300);
         message_window.visible = OUT_VISIBLE;
     }
 
@@ -2156,10 +2277,10 @@ int get_treasure_message() {
                         message = TRESUREBOX_EMPTY_MESSAGE;
                     }
 
-		    return 0;
+                    return 0;
                 }
-	    } else if (player.direction == DOWN) {
-	        if (treasure[i].treasure[j].map_x == player.map_x &&
+            } else if (player.direction == DOWN) {
+                if (treasure[i].treasure[j].map_x == player.map_x &&
                     treasure[i].treasure[j].map_y == player.map_y + 1 &&
                     strcmp(treasure[i].map, MAP_EVENT_NAME) == 0) {
 
@@ -2172,10 +2293,10 @@ int get_treasure_message() {
                         message = TRESUREBOX_EMPTY_MESSAGE;
                     }
 
-		    return 0;
+                    return 0;
 
                 }
-	    } else if (player.direction == RIGHT) {
+           } else if (player.direction == RIGHT) {
                 if (treasure[i].treasure[j].map_x == player.map_x + 1 &&
                     treasure[i].treasure[j].map_y == player.map_y &&
                     strcmp(treasure[i].map, MAP_EVENT_NAME) == 0) {
@@ -2189,10 +2310,10 @@ int get_treasure_message() {
                         message = TRESUREBOX_EMPTY_MESSAGE;
                     }
 
-		    return 0;
+                    return 0;
 
-	        }
-	    } else if (player.direction == LEFT) {
+                }
+           } else if (player.direction == LEFT) {
                 if (treasure[i].treasure[j].map_x == player.map_x - 1 &&
                     treasure[i].treasure[j].map_y == player.map_y &&
                     strcmp(treasure[i].map, MAP_EVENT_NAME) == 0) {
@@ -2206,9 +2327,9 @@ int get_treasure_message() {
                         message = TRESUREBOX_EMPTY_MESSAGE;
                     }
 
-		    return 0;
+                    return 0;
 
-	        }
+                }
             }
         }
     }
@@ -2247,7 +2368,7 @@ int get_npc_message() {
                 message = npc[i].message;
                 return 0;
             }
-	}
+        }
     }
 
     message = TALK_MESSAGE;
@@ -2269,7 +2390,7 @@ int get_message() {
         } else if (is_movable(player.map_x, player.map_y - 1) == OPEN) {
             open_door();
             message_window_status();
-	    state = OFF;
+            state = OFF;
         }
     } else if (player.direction == DOWN) {
         if (is_movable(player.map_x, player.map_y + 1) == TALK) {
@@ -2279,8 +2400,8 @@ int get_message() {
         } else if (is_movable(player.map_x, player.map_y + 1) == OPEN) {
             open_door();
             message_window_status();
-	    state = OFF;
-	}
+            state = OFF;
+        }
     } else if (player.direction == RIGHT) {
         if (is_movable(player.map_x + 1, player.map_y) == TALK) {
             get_npc_message();
@@ -2289,7 +2410,7 @@ int get_message() {
         } else if (is_movable(player.map_x + 1, player.map_y) == OPEN) {
             open_door();
             message_window_status();
-	    state = OFF;
+            state = OFF;
         }
     } else if (player.direction == LEFT) {
         if (is_movable(player.map_x - 1, player.map_y) == TALK) {
@@ -2299,7 +2420,7 @@ int get_message() {
         } else if (is_movable(player.map_x - 1, player.map_y) == OPEN) {
             open_door();
             message_window_status();
-	    state = OFF;
+            state = OFF;
         }
     }
 
@@ -2522,12 +2643,12 @@ int make_commands_window(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
                 } else if (command_status == MEMORY) {
                 } else if (command_status == STATUS) {
                     make_status_window(renderer, font, e);
-		    break;
+                    break;
                 } else if (command_status == EQUIPMENT) {
                 } else if (command_status == OPEN) {
                     state = ON;
-		    open_door();
-		    break;
+                    open_door();
+                    break;
                 } else if (command_status == SPELL) {
                 } else if (command_status == SKILL) {
                 } else if (command_status == TOOLS) {
@@ -2536,7 +2657,7 @@ int make_commands_window(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
                     state = ON;
                     message_window_status();
                     get_treasure_message();
-		    break;
+                    break;
                 }
             } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_RIGHT){
                 sound_se(se_file);
@@ -2709,7 +2830,7 @@ int make_status_window(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
                     make_commands_back_window(renderer, font, e);
                     make_status_window(renderer, font, e);
                     break;
-		}
+                }
             } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_UP){
                 sound_se(se_file);
                 if (triangle_y1 > 80) {
@@ -2848,6 +2969,11 @@ int convert_int_to_full_width_char(int num, char *str_to_return) {
     int calc_digit;
     char tmp[256] = {};
 
+    if (num == 0) {
+        sprintf(str_to_return, "%s", "０");
+        return 0;
+    }
+
     num = num * 10 + 9;
 
     while (num > 0) {
@@ -2859,35 +2985,35 @@ int convert_int_to_full_width_char(int num, char *str_to_return) {
 
     while(calc_digit != 0) {
         calc_digit = calc_digit / 10;
-	++digit;
+        ++digit;
     } 
 
     for (i = 0;i < digit - 1;i++) {
         number = reverse % 10;
 
-	if (number == 9) {
+        if (number == 9) {
             sprintf(tmp, "%s%s", tmp , "９");
-	} else if (number == 8) {
+        } else if (number == 8) {
             sprintf(tmp, "%s%s", tmp , "８");
-	} else if (number == 7) {
+        } else if (number == 7) {
             sprintf(tmp, "%s%s", tmp , "７");
-	} else if (number == 6) {
+        } else if (number == 6) {
             sprintf(tmp, "%s%s", tmp , "６");
-	} else if (number == 5) {
+        } else if (number == 5) {
             sprintf(tmp, "%s%s", tmp , "５");
-	} else if (number == 4) {
+        } else if (number == 4) {
             sprintf(tmp, "%s%s", tmp , "４");
-	} else if (number == 3) {
+        } else if (number == 3) {
             sprintf(tmp, "%s%s", tmp , "３");
-	} else if (number == 2) {
+        } else if (number == 2) {
             sprintf(tmp, "%s%s", tmp , "２");
-	} else if (number == 1) {
+        } else if (number == 1) {
             sprintf(tmp, "%s%s", tmp , "１");
-	} else if (number == 0) {
+        } else if (number == 0) {
             sprintf(tmp, "%s%s", tmp , "０");
-	}
+        }
 
-	reverse = reverse / 10;
+        reverse = reverse / 10;
 
     }
 

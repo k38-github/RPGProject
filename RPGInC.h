@@ -179,6 +179,8 @@ int make_hp_and_mp_window(SDL_Renderer *, TTF_Font *, SDL_Event);
 int convert_int_to_full_width_char(int, char *);
 int convert_int_to_alphabet(int, char *);
 int knock_out_monster(SDL_Renderer *, int, int);
+int compare_agility(const void *, const void *);
+int create_battle_status_window(SDL_Renderer *);
 
 /*** message list ***/
 #define TALK_MESSAGE "そっちには　だれも　いないよ。"
