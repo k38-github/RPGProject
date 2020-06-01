@@ -157,6 +157,7 @@ int window_update(SDL_Renderer *, TTF_Font *, SDL_Event);
 int message_window_status();
 int message_engine(SDL_Renderer *, TTF_Font *, SDL_Event);
 int display_character_string(SDL_Renderer *, TTF_Font *, char *, double, double, int);
+int display_aliging_to_the_right(SDL_Renderer *, TTF_Font *, char *, double, double, int);
 int get_message();
 int get_treasure_message();
 int get_npc_message();
@@ -178,9 +179,11 @@ int get_status_triangle(int *, int *, int *, int *, int *, int *);
 int make_hp_and_mp_window(SDL_Renderer *, TTF_Font *, SDL_Event);
 int convert_int_to_full_width_char(int, char *);
 int convert_int_to_alphabet(int, char *);
+
 int knock_out_monster(SDL_Renderer *, int, int);
 int compare_agility(const void *, const void *);
 int create_battle_status_window(SDL_Renderer *);
+
 
 /*** message list ***/
 #define TALK_MESSAGE "そっちには　だれも　いないよ。"
@@ -213,6 +216,7 @@ int ROW = 15;
 int COL = 20;
 int OUT_OF_MAP = 0;
 char MAP_EVENT_NAME[256] = "field";
+int GOLD = 0;
 
 int animecycle = 24;
 int speed = 2;
@@ -220,6 +224,7 @@ int frame = 0;
 int number_of_map_image = 0;
 int number_of_npc_image = 0;
 int number_of_monster = 0;
+
 
 CARACTER player = {1, 1, 32, 32, 0, 0, 0, 0, DOWN, FALSE};
 NPC npc[256] = {0};
@@ -236,7 +241,9 @@ WINDOW message_window = {140, 334, 360, 140, 255, OUT_VISIBLE};
 WINDOW debug_window = {5, 5, 100, 50, 255, OUT_VISIBLE};
 WINDOW command_window = {16, 16, 216, 160, 255, OUT_VISIBLE};
 WINDOW status_window = {32, 32, 170, 135, 255, OUT_VISIBLE};
+WINDOW player_status_window = {500, 320, 120, 140, 255, OUT_VISIBLE};
 WINDOW hp_and_mp_window = {48, 48, 170, 220, 255, OUT_VISIBLE};
+WINDOW gold_window = {480, 32, 140, 30, 255, OUT_VISIBLE};
 
 WINDOW battle_back_window = {-10, 100, 660, 238, 255, OUT_VISIBLE};
 WINDOW battle_status_window = {64, 20, 120, 140, 255, OUT_VISIBLE};

@@ -1396,17 +1396,50 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
             triangle_y3 = 344;
 
         } else if (battle_status == DEFENSE) {
+            flash_triangle_status = OFF;
+
             strcpy(mes_buf, "\0");
 
             state = ON;
             message_window_status();
-            player.status.protection = player.status.protection * 1.2;
+            player.status.protection = player.status.protection * 1.4;
             printf("protection: %d\n", player.status.protection);
 
-            strncat(mes_buf, player.status.name, 30);
-            message = strcat(mes_buf, "は　みをまもっている！");
+            sprintf(mes_buf, "%sは　みをまもっている！", player.status.name);
+            message = mes_buf;
             window_update(renderer, font, e);
+
+            int player_damage;
+            char damage_hull_width[30] = {0};
+
+            for(i=0;i<num_of_monster;i++){
+                if (0 < monster_object[i].status.hp) {
+                    state = ON;
+                    message_window_status();
+
+                    srand((unsigned)time(NULL));
+                    player_damage = (monster_object[i].status.strength - (player.status.protection / 2)) *
+                                     (99 + rand()%55) / 256;
+                    if (player_damage < 0) {
+                        player_damage = 0;
+                    }
+
+                    convert_int_to_full_width_char(player_damage, damage_hull_width);
+                    sprintf(mes_buf,"%sの　こうげき！  %sに　%sの　ダメージ！！", 
+                                    monster_object[i].status.name, player.status.name,  damage_hull_width);
+
+                    player.status.hp = player.status.hp - player_damage;
+
+                    message = mes_buf;
+                    window_update(renderer, font, e);
+
+                    create_battle_status_window(renderer);
+                }
+            }
+
             battle_status = NORMAL;
+
+            player.status.protection = player.status.protection / 1.4;
 
             triangle_y1 = triangle_y1 - 21;
             triangle_y2 = triangle_y2 - 21;
@@ -1419,8 +1452,8 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
             message_window_status();
 
             if (monster.status.agility + num_of_monster/10 < player.status.agility) {
-                strncat(mes_buf, monster_name, 30);
-                message = strcat(mes_buf, "から　にげきれた！");
+                sprintf(mes_buf, "%sから　にげきれた！", monster_name);
+                message = mes_buf;
                 window_update(renderer, font, e);
                 break;
             } else {
@@ -1429,26 +1462,35 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
                 printf("escape:%d %d\n", monster.status.agility, escape + player.status.agility);
  
                 if ( monster.status.agility + num_of_monster/10 < escape + player.status.agility) {
-                    strncat(mes_buf, monster_name, 30);
-                    message = strcat(mes_buf, "から　にげきれた！");
+                    sprintf(mes_buf, "%sから　にげきれた！", monster_name);
+                    message = mes_buf;
                     window_update(renderer, font, e);
                     break;
                 } else {
-                    strncat(mes_buf, player.status.name, 30);
-                    message = strcat(mes_buf, "はとうそうした!  しかし、まわりこまれてしまった。");
+                    sprintf(mes_buf, "%sは　とうそうした!  しかし、まわりこまれてしまった。", player.status.name);
+                    message = mes_buf;
                     window_update(renderer, font, e);
                     battle_status = NORMAL;
                 }
             }
         } else if (battle_status == BATTLE_END) {
             printf("battle_end\n");
+            char gold_hull_width[30] = {0};
+            char experience_hull_width[30] = {0};
             strcpy(mes_buf, "\0");
 
             state = ON;
             message_window_status();
 
-            strncat(mes_buf, player.status.name, 30);
-            message = strcat(monster.status.name, "をたおした！");
+            GOLD = GOLD + monster.gold * num_of_monster;
+            player.status.experience_point = player.status.experience_point + monster.status.experience_point;
+
+            convert_int_to_full_width_char(monster.gold, gold_hull_width);
+            convert_int_to_full_width_char(monster.status.experience_point, experience_hull_width);
+            sprintf(mes_buf, "%sを　たおした！**%sポイントの　けいけんちを　かくとく！  %sゴールドを　てにいれた！",
+                              monster.status.name, experience_hull_width, gold_hull_width);
+            message = mes_buf;
+
             window_update(renderer, font, e);
 
             break;
@@ -2582,6 +2624,30 @@ int make_commands_back_window(SDL_Renderer *renderer, TTF_Font *font, SDL_Event 
     display_character_string(renderer, font, "さくせん", 150.0, 110.0, 1);
     display_character_string(renderer, font, "しらべる", 150.0, 135.0, 1);
 
+    char hp[10] = {0};
+    char mp[10] = {0};
+    char level[10] = {0};
+
+    make_window(renderer, player_status_window);
+
+    display_character_string(renderer, font, player.status.name, 531.0, 330.0, 1);
+
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
+    SDL_RenderDrawLine(renderer, 500, 355, 616, 355);
+
+    display_character_string(renderer, font, "Ｈ", 510.0, 365.0, 1);
+    convert_int_to_full_width_char(player.status.hp, hp);
+    display_character_string(renderer, font, hp, 546.0, 365.0, 1);
+
+    display_character_string(renderer, font, "Ｍ", 510.0, 395.0, 1);
+    convert_int_to_full_width_char(player.status.mp, mp);
+    display_character_string(renderer, font, mp, 546.0, 395.0, 1);
+
+    display_character_string(renderer, font, "lv：", 510.0, 425.0, 1);
+    convert_int_to_full_width_char(player.status.level, level);
+    display_character_string(renderer, font, level, 546.0, 425.0, 1);
+
+
     SDL_RenderPresent(renderer);
 
     return 0;
@@ -2617,6 +2683,30 @@ int make_commands_window(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
     display_character_string(renderer, font, "どうぐ",   150.0, 85.0,  1);
     display_character_string(renderer, font, "さくせん", 150.0, 110.0, 1);
     display_character_string(renderer, font, "しらべる", 150.0, 135.0, 1);
+
+    char hp[10] = {0};
+    char mp[10] = {0};
+    char level[10] = {0};
+
+    make_window(renderer, player_status_window);
+
+    display_character_string(renderer, font, player.status.name, 531.0, 330.0, 1);
+
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
+    SDL_RenderDrawLine(renderer, 500, 355, 616, 355);
+
+    display_character_string(renderer, font, "Ｈ", 510.0, 365.0, 1);
+    convert_int_to_full_width_char(player.status.hp, hp);
+    display_character_string(renderer, font, hp, 546.0, 365.0, 1);
+
+    display_character_string(renderer, font, "Ｍ", 510.0, 395.0, 1);
+    convert_int_to_full_width_char(player.status.mp, mp);
+    display_character_string(renderer, font, mp, 546.0, 395.0, 1);
+
+    display_character_string(renderer, font, "lv：", 510.0, 425.0, 1);
+    convert_int_to_full_width_char(player.status.level, level);
+    display_character_string(renderer, font, level, 546.0, 425.0, 1);
+
 
     SDL_RenderPresent(renderer);
 
@@ -2789,6 +2879,8 @@ int make_status_window(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
     int triangle_x3 = 47;
     int triangle_y3 = 99;
 
+    char gold_full_width[20] = {0};
+
     get_status_triangle(&triangle_x1, &triangle_y1,
                         &triangle_x2, &triangle_y2,
                         &triangle_x3, &triangle_y3);
@@ -2800,9 +2892,13 @@ int make_status_window(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
                             triangle_x3, triangle_y3,
                             255, 255, 255, 255, 1);
 
+    // x方向に+16
+    make_window(renderer, gold_window);
+    display_character_string(renderer, font, "Ｇ",   488.0, 38.0,  1);
+    convert_int_to_full_width_char(GOLD, gold_full_width);
+    display_aliging_to_the_right(renderer, font, gold_full_width, 616.0, 38.0, 16);
 
     display_character_string(renderer, font, "つよさ",   70.0, 50.0,  1);
-    //display_character_string(renderer, font, "-------------", 70.0, 65.0,  1);
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
     SDL_RenderDrawLine(renderer, 70, 73, 180, 73);
     display_character_string(renderer, font, "ＨＰとＭＰ",   70.0, 80.0,  1);
@@ -3044,6 +3140,42 @@ int convert_int_to_alphabet(int number, char *alphabet_to_return) {
     }
 
     sprintf(alphabet_to_return, "%s", tmp);
+
+    return 0;
+}
+
+int display_aliging_to_the_right(SDL_Renderer *renderer, TTF_Font *font, char *string, double right_x, double right_y, int size) {
+    // right_x, right_yは1番右にくる文字の右上の座標を指定する
+
+    int word_counter = 0;
+    int byt;
+    int sum_byt = 0;
+
+    int length;
+
+    length = strlen(string);
+
+    while (*string != '\0') {
+
+        byt = u8mb(*string);
+        sum_byt = sum_byt + byt;
+
+        // printf("%dbyte文字です\n", byt);
+
+        string += u8mb(*string);
+
+        word_counter++;
+
+    }
+
+    string = string - sum_byt;
+
+    // printf("%s: %d文字入力されました。\n", string, word_counter);
+    // printf("合計 %dbyte入力されました。\n", sum_byt);
+
+    right_x = right_x - (double)(size * word_counter);
+
+    display_character_string(renderer, font, string, right_x, right_y,  1);
 
     return 0;
 }
