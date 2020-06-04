@@ -951,68 +951,28 @@ int draw_monster(SDL_Renderer *renderer, char *path, int num_of_monster, MONSTER
 
 }
 
-int knock_out_monster(SDL_Renderer *renderer, int num_of_monster, int enemy_pos) {
+int knock_out_monster(SDL_Renderer *renderer, SDL_Event e, char *path, int num_of_monster,
+                      MONSTER *monster_object, char *mes_buf) {
 
-    if (num_of_monster == 1) {
-        make_box(renderer, 300, 200, 64, 64, 255, 0, 0, 0);
-    } else if (num_of_monster == 2) { 
-        if (enemy_pos == ENEMY_POS_1) {
-            make_box(renderer, 236, 200, 64, 64, 255, 0, 0, 0);
-        }
-    
-        if (enemy_pos == ENEMY_POS_2) {
-            make_box(renderer, 364, 200, 64, 64, 255, 0, 0, 0);
-        }
-    } else if (num_of_monster == 3) {
-        if (enemy_pos == ENEMY_POS_1) {
-            make_box(renderer, 236, 200, 64, 64, 255, 0, 0, 0);
-        }
-    
-        if (enemy_pos == ENEMY_POS_2) {
-            make_box(renderer, 300, 200, 64, 64, 255, 0, 0, 0);
-        }
-    
-        if (enemy_pos == ENEMY_POS_3) {
-            make_box(renderer, 364, 200, 64, 64, 255, 0, 0, 0);
-        }
-    } else if (num_of_monster == 4) {
-        if (enemy_pos == ENEMY_POS_1) {
-            make_box(renderer, 172, 200, 64, 64, 255, 0, 0, 0);
-        }
-    
-        if (enemy_pos == ENEMY_POS_2) {
-            make_box(renderer, 236, 200, 64, 64, 255, 0, 0, 0);
-        }
-    
-        if (enemy_pos == ENEMY_POS_3) {
-            make_box(renderer, 300, 200, 64, 64, 255, 0, 0, 0);
-        }
-    
-        if (enemy_pos == ENEMY_POS_4) {
-            make_box(renderer, 364, 200, 64, 64, 255, 0, 0, 0);
-        }
-    } else if (num_of_monster == 5) {
-        if (enemy_pos == ENEMY_POS_1) {
-            make_box(renderer, 172, 200, 64, 64, 255, 0, 0, 0);
-        }
-    
-        if (enemy_pos == ENEMY_POS_2) {
-            make_box(renderer, 236, 200, 64, 64, 255, 0, 0, 0);
-        }
-    
-        if (enemy_pos == ENEMY_POS_3) {
-            make_box(renderer, 300, 200, 64, 64, 255, 0, 0, 0);
-        }
-    
-        if (enemy_pos == ENEMY_POS_4) {
-            make_box(renderer, 364, 200, 64, 64, 255, 0, 0, 0);
-        }
-    
-        if (enemy_pos == ENEMY_POS_5) {
-            make_box(renderer, 428, 200, 64, 64, 255, 0, 0, 0);
-        }
-    }
-    
+    SDL_RenderClear(renderer);
+
+    draw_map(renderer);
+    draw_treasure(renderer);
+    draw_door(renderer, e);
+    npc_animation(renderer);
+
+    make_window(renderer, battle_back_window);
+    draw_monster(renderer, path, num_of_monster, monster_object);
+
+    create_battle_status_window(renderer);
+
+    state = ON;
+    message_window_status();
+
+    message = mes_buf;
+    make_window(renderer, message_window);
+    flush_message_engine(renderer, font, e);
+
     SDL_RenderPresent(renderer);
 
     return 0;
@@ -1033,15 +993,15 @@ int create_battle_status_window(SDL_Renderer *renderer) {
 
     display_character_string(renderer, font, "Ｈ", 74.0, 65.0, 1);
     convert_int_to_full_width_char(player.status.hp, hp);
-    display_character_string(renderer, font, hp, 110.0, 65.0, 1);
+    display_aliging_to_the_right(renderer, font, hp, 158.0, 65.0, 16);
 
     display_character_string(renderer, font, "Ｍ", 74.0, 95.0, 1);
     convert_int_to_full_width_char(player.status.mp, mp);
-    display_character_string(renderer, font, mp, 110.0, 95.0, 1);
+    display_aliging_to_the_right(renderer, font, mp, 158.0, 95.0, 16);
 
     display_character_string(renderer, font, "lv：", 74.0, 125.0, 1);
     convert_int_to_full_width_char(player.status.level, level);
-    display_character_string(renderer, font, level, 110.0, 125.0, 1);
+    display_aliging_to_the_right(renderer, font, level, 158.0, 125.0, 16);
 
 
     return 0;
@@ -1311,7 +1271,7 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
                             }
                         }
 
-                        knock_out_monster(renderer, num_of_monster, order[enemy_pos]);
+                        knock_out_monster(renderer, e, path, num_of_monster, monster_object, mes_buf);
                         SDL_Delay(400);
 
                         printf("taoshita: %s\n", monster_object[order[enemy_pos]].status.name);
@@ -1361,7 +1321,7 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
 
                 if (monster_object[order[enemy_pos]].status.hp <= 0) {
 
-                    knock_out_monster(renderer, num_of_monster, order[enemy_pos]);
+                    knock_out_monster(renderer, e, path, num_of_monster, monster_object, mes_buf);
                     SDL_Delay(400);
 
                     strcpy(mes_buf, "\0");
@@ -2298,6 +2258,100 @@ int message_engine(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
     return 0;
 }
 
+int flush_message_engine(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
+
+    int x;
+    int message_length;
+    int remaining_message_length;
+    int word_length = 0;
+    int byte_counter;
+    int byt;
+
+    int loop_counter = 0;
+    int row_position = 0;
+    int col_position = 0;
+    int tmp_position = 0;
+
+    const int row_size = 21;
+    const int col_size = 84;
+    const double start_x = 153.0;
+    const double start_y = 354.0;
+    const double inter_char = 5.35;
+
+    char message_tmp[1024];
+    char message_out[100];
+    char word[6];
+    char isspace[3] = {0};
+    char isasterisk[3] = {0};
+
+
+    strcpy(message_tmp, message);
+    message_length = strlen(message);
+
+    while (*message != '\0') {
+        byt = u8mb(*message);
+        message += u8mb(*message);
+
+        remaining_message_length = strlen(message);
+
+        memset(word, '\0', 6);
+
+        byte_counter = 0;
+        for (x=word_length;x<message_length - remaining_message_length;x++) {
+            sprintf(&word[byte_counter], "%c", message_tmp[x]);
+            byte_counter++;
+        }
+
+        // 改行判定(半角スペースが2つ続いたら改行とみなす)
+        if (*word == ' ') {
+            if (strcmp(isspace, "  ") == 0) {
+                memset(isspace, '\0', 3);
+            }
+            strncat(isspace, word, 1);
+        } else {
+            memset(isspace, '\0', 3);
+        }
+
+        if (strcmp(isspace, "  ") == 0) {
+            if (loop_counter % col_size != 0) {
+                loop_counter = loop_counter + (row_size - (loop_counter % row_size) - 1);
+            }
+        }
+
+        // 改ページ判定(アスタリスクが2つ続いたら改ページとみなす)
+        if (*word == '*') {
+            if (strcmp(isasterisk, "**") == 0) {
+                memset(isasterisk, '\0', 3);
+            }
+            strncat(isasterisk, word, 1);
+            strncpy(word, " ", 1);
+        } else {
+            memset(isasterisk, '\0', 3);
+        }
+
+        if (strcmp(isasterisk, "**") == 0) {
+            loop_counter = loop_counter + (col_size - (loop_counter % col_size) - 1);
+        }
+
+        // 折り返し判定
+        if (loop_counter != 0 &&loop_counter % row_size == 0) {
+            display_character_string(renderer, font, message_out, start_x + col_position * inter_char, start_y + row_position, 0);
+            row_position += row_size;
+            col_position = 0;
+            tmp_position = word_length;
+            memset(message_out, '\0', 100);
+        }
+
+        strcat(message_out, word);
+        word_length = message_length - remaining_message_length;
+
+        loop_counter++;
+    }
+    display_character_string(renderer, font, message_out, start_x + col_position * inter_char, start_y + row_position, 0);
+
+    return 0;
+}
+
 int get_treasure_message() {
 
     int i, j;
@@ -2637,15 +2691,15 @@ int make_commands_back_window(SDL_Renderer *renderer, TTF_Font *font, SDL_Event 
 
     display_character_string(renderer, font, "Ｈ", 510.0, 365.0, 1);
     convert_int_to_full_width_char(player.status.hp, hp);
-    display_character_string(renderer, font, hp, 546.0, 365.0, 1);
+    display_aliging_to_the_right(renderer, font, hp, 594.0, 365.0, 16);
 
     display_character_string(renderer, font, "Ｍ", 510.0, 395.0, 1);
     convert_int_to_full_width_char(player.status.mp, mp);
-    display_character_string(renderer, font, mp, 546.0, 395.0, 1);
+    display_aliging_to_the_right(renderer, font, mp, 594.0, 395.0, 16);
 
     display_character_string(renderer, font, "lv：", 510.0, 425.0, 1);
     convert_int_to_full_width_char(player.status.level, level);
-    display_character_string(renderer, font, level, 546.0, 425.0, 1);
+    display_aliging_to_the_right(renderer, font, level, 594.0, 425.0, 16);
 
 
     SDL_RenderPresent(renderer);
@@ -2697,15 +2751,15 @@ int make_commands_window(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
 
     display_character_string(renderer, font, "Ｈ", 510.0, 365.0, 1);
     convert_int_to_full_width_char(player.status.hp, hp);
-    display_character_string(renderer, font, hp, 546.0, 365.0, 1);
+    display_aliging_to_the_right(renderer, font, hp, 594.0, 365.0, 16);
 
     display_character_string(renderer, font, "Ｍ", 510.0, 395.0, 1);
     convert_int_to_full_width_char(player.status.mp, mp);
-    display_character_string(renderer, font, mp, 546.0, 395.0, 1);
+    display_aliging_to_the_right(renderer, font, mp, 594.0, 395.0, 16);
 
     display_character_string(renderer, font, "lv：", 510.0, 425.0, 1);
     convert_int_to_full_width_char(player.status.level, level);
-    display_character_string(renderer, font, level, 546.0, 425.0, 1);
+    display_aliging_to_the_right(renderer, font, level, 594.0, 425.0, 16);
 
 
     SDL_RenderPresent(renderer);
@@ -2916,6 +2970,15 @@ int make_status_window(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
                 break;
             } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE){
                 sound_se(se_file);
+                SDL_RenderClear(renderer);
+                draw_map(renderer);
+                draw_treasure(renderer);
+                draw_door(renderer, e);
+
+                npc_animation(renderer);
+
+                player_animation(renderer, player_image);
+
                 make_commands_window(renderer, font, e);
                 break;
             } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SPACE){
@@ -3013,21 +3076,21 @@ int make_hp_and_mp_window(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
 
     display_character_string(renderer, font, "Ｈ",                  70.0, 140.0, 1);
     convert_int_to_full_width_char(player.status.hp, hp);
-    display_character_string(renderer, font, hp,                   110.0, 140.0, 1);
+    display_aliging_to_the_right(renderer, font, hp,               158.0, 140.0, 16);
 
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
     SDL_RenderDrawLine(renderer, 90, 163, 170, 163);
     convert_int_to_full_width_char(player.status.max_hp, max_hp);
-    display_character_string(renderer, font, max_hp,               110.0, 170.0, 1);
+    display_aliging_to_the_right(renderer, font, max_hp,           158.0, 170.0, 16);
 
     display_character_string(renderer, font, "Ｍ",                  70.0, 195.0, 1);
     convert_int_to_full_width_char(player.status.mp, mp);
-    display_character_string(renderer, font, mp,                   110.0, 195.0, 1);
+    display_aliging_to_the_right(renderer, font, mp,               158.0, 195.0, 16);
 
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
     SDL_RenderDrawLine(renderer, 90, 218, 170, 218);
     convert_int_to_full_width_char(player.status.max_mp, max_mp);
-    display_character_string(renderer, font, max_mp,               110.0, 225.0, 1);
+    display_aliging_to_the_right(renderer, font, max_mp,           158.0, 225.0, 16);
 
     char *se_file = "pi.ogg";
     while (1) {

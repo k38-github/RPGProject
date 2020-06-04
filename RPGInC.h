@@ -156,6 +156,7 @@ int make_triangle(SDL_Renderer *, int, int, int, int, int, int, int, int, int, i
 int window_update(SDL_Renderer *, TTF_Font *, SDL_Event);
 int message_window_status();
 int message_engine(SDL_Renderer *, TTF_Font *, SDL_Event);
+int flush_message_engine(SDL_Renderer *, TTF_Font *, SDL_Event);
 int display_character_string(SDL_Renderer *, TTF_Font *, char *, double, double, int);
 int display_aliging_to_the_right(SDL_Renderer *, TTF_Font *, char *, double, double, int);
 int get_message();
@@ -180,7 +181,8 @@ int make_hp_and_mp_window(SDL_Renderer *, TTF_Font *, SDL_Event);
 int convert_int_to_full_width_char(int, char *);
 int convert_int_to_alphabet(int, char *);
 
-int knock_out_monster(SDL_Renderer *, int, int);
+int knock_out_monster(SDL_Renderer *renderer, SDL_Event, char *, int, MONSTER *, char *);
+// int knock_out_monster(SDL_Renderer *, int, int);
 int compare_agility(const void *, const void *);
 int create_battle_status_window(SDL_Renderer *);
 
