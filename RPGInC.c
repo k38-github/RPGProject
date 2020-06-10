@@ -2278,9 +2278,9 @@ int flush_message_engine(SDL_Renderer *renderer, TTF_Font *font, SDL_Event e) {
     const double start_y = 354.0;
     const double inter_char = 5.35;
 
-    char message_tmp[1024];
-    char message_out[100];
-    char word[6];
+    char message_tmp[1024] = {0};
+    char message_out[100] = {0};
+    char word[6] = {0};
     char isspace[3] = {0};
     char isasterisk[3] = {0};
 
