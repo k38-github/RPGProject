@@ -844,107 +844,41 @@ int battle_encount(SDL_Renderer *renderer, SDL_Event e) {
 
 int draw_monster(SDL_Renderer *renderer, char *path, int num_of_monster, MONSTER *monster) {
 
+    int i;
+    int pos;
+    int w, h;
+
     SDL_Texture *monster_image = NULL;
     load_image(renderer, &monster_image, path);
+
+    SDL_QueryTexture(monster_image, NULL, NULL, &w, &h);
 
     SDL_Rect imageRect;
     SDL_Rect drawRect;
 
+    if ((num_of_monster % 2) == 1) {
+        pos = -1 * w/2 - (w * (num_of_monster / 2)) ;
 
-    if (num_of_monster == 1) {
-        if (0 < monster[0].status.hp) {
-            imageRect=(SDL_Rect){0, 0, 32, 32};
-            drawRect=(SDL_Rect){300, 200, 64, 64};
+        for (i=0;i<num_of_monster;i++) {
+            if (0 < monster[i].status.hp) {
+                imageRect=(SDL_Rect){0, 0, w, h};
+                drawRect=(SDL_Rect){SCREEN_WIDTH/2+pos, SCREEN_HEIGHT/2-h/2, w, h};
 
-            SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
+                SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
+            }
+            pos = pos + w;
         }
-    } else if (num_of_monster == 2) { 
-        if (0 < monster[0].status.hp) {
-            imageRect=(SDL_Rect){0, 0, 32, 32};
-            drawRect=(SDL_Rect){236, 200, 64, 64};
-            SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
-        }
+    } else if ((num_of_monster % 2) == 0) { 
+        pos = -1 * w * (num_of_monster/2);
 
-        if (0 < monster[1].status.hp) {
-            imageRect=(SDL_Rect){0, 0, 32, 32};
-            drawRect=(SDL_Rect){364, 200, 64, 64};
-            SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
+        for (i=0;i<num_of_monster;i++) {
+            if (0 < monster[i].status.hp) {
+                imageRect=(SDL_Rect){0, 0, w, h};
+                drawRect=(SDL_Rect){SCREEN_WIDTH/2+pos, SCREEN_HEIGHT/2-h/2, w, h};
+                SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
+            }
+            pos = pos + w;
         }
-    } else if (num_of_monster == 3) {
-        if (0 < monster[0].status.hp) {
-            imageRect=(SDL_Rect){0, 0, 32, 32};
-            drawRect=(SDL_Rect){236, 200, 64, 64};
-            SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
-        }
-
-        if (0 < monster[1].status.hp) {
-            imageRect=(SDL_Rect){0, 0, 32, 32};
-            drawRect=(SDL_Rect){300, 200, 64, 64};
-            SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
-        }
-
-        if (0 < monster[2].status.hp) {
-            imageRect=(SDL_Rect){0, 0, 32, 32};
-            drawRect=(SDL_Rect){364, 200, 64, 64};
-            SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
-        }
-
-    } else if (num_of_monster == 4) {
-        if (0 < monster[0].status.hp) {
-            imageRect=(SDL_Rect){0, 0, 32, 32};
-            drawRect=(SDL_Rect){172, 200, 64, 64};
-            SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
-        }
-
-        if (0 < monster[1].status.hp) {
-            imageRect=(SDL_Rect){0, 0, 32, 32};
-            drawRect=(SDL_Rect){236, 200, 64, 64};
-            SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
-        }
-
-        if (0 < monster[2].status.hp) {
-            imageRect=(SDL_Rect){0, 0, 32, 32};
-            drawRect=(SDL_Rect){300, 200, 64, 64};
-            SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
-        }
-
-        if (0 < monster[3].status.hp) {
-            imageRect=(SDL_Rect){0, 0, 32, 32};
-            drawRect=(SDL_Rect){364, 200, 64, 64};
-            SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
-        }
-
-    } else if (num_of_monster == 5) {
-        if (0 < monster[0].status.hp) {
-            imageRect=(SDL_Rect){0, 0, 32, 32};
-            drawRect=(SDL_Rect){172, 200, 64, 64};
-            SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
-        }
-
-        if (0 < monster[1].status.hp) {
-            imageRect=(SDL_Rect){0, 0, 32, 32};
-            drawRect=(SDL_Rect){236, 200, 64, 64};
-            SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
-        }
-
-        if (0 < monster[2].status.hp) {
-            imageRect=(SDL_Rect){0, 0, 32, 32};
-            drawRect=(SDL_Rect){300, 200, 64, 64};
-            SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
-        }
-
-        if (0 < monster[3].status.hp) {
-            imageRect=(SDL_Rect){0, 0, 32, 32};
-            drawRect=(SDL_Rect){364, 200, 64, 64};
-            SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
-        }
-
-        if (0 < monster[4].status.hp) {
-            imageRect=(SDL_Rect){0, 0, 32, 32};
-            drawRect=(SDL_Rect){428, 200, 64, 64};
-            SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
-        }
-
     }
 
     return 0;
