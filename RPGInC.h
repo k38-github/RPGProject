@@ -78,6 +78,10 @@ typedef struct {
     double encounter_probability;
     CHARACTER_STATUS status;
 
+    SDL_Texture *monster_image;
+    SDL_Rect imageRect;
+    SDL_Rect drawRect;
+
 } MONSTER;
 
 typedef struct {

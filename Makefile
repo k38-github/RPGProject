@@ -1,7 +1,10 @@
 all: RPGInC
 
-RPGInC:
-	gcc -g -o RPGInC RPGInC.c RPGInC.h `sdl2-config --cflags --libs` -lSDL2_image -lSDL2_ttf -lSDL2_mixer
+RPGInC: effect.o
+	gcc -g -o RPGInC RPGInC.c RPGInC.h effect.o `sdl2-config --cflags --libs` -lSDL2_image -lSDL2_ttf -lSDL2_mixer
+
+effect.o:
+	gcc -g -c ./effect/effect.c ./effect/effect.h
 
 run:
 	./RPGInC
@@ -14,3 +17,4 @@ runmap:
 
 clean:
 	rm -f RPGInC
+	rm -f effect.o

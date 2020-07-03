@@ -6,6 +6,7 @@
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_mixer.h>
 #include "RPGInC.h"
+#include "effect/effect.h"
 
 int main (int argc, char *argv[]) {
 
@@ -830,7 +831,7 @@ int battle_encount(SDL_Renderer *renderer, SDL_Event e) {
     int target = rand()%number_of_monster;
     srand((unsigned)time(NULL));
     double encount = (double)rand()/RAND_MAX;
- 
+
     // printf("encount:%lf\n", encount);
     // printf("monster:%lf\n", monster[target].encounter_probability);
     if (encount < monster[target].encounter_probability) {
@@ -865,10 +866,14 @@ int draw_monster(SDL_Renderer *renderer, char *path, int num_of_monster, MONSTER
                 drawRect=(SDL_Rect){SCREEN_WIDTH/2+pos, SCREEN_HEIGHT/2-h/2, w, h};
 
                 SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
+
+                monster[i].monster_image = monster_image;
+                monster[i].imageRect = imageRect;
+                monster[i].drawRect = drawRect;
             }
             pos = pos + w;
         }
-    } else if ((num_of_monster % 2) == 0) { 
+    } else if ((num_of_monster % 2) == 0) {
         pos = -1 * w * (num_of_monster/2);
 
         for (i=0;i<num_of_monster;i++) {
@@ -876,6 +881,10 @@ int draw_monster(SDL_Renderer *renderer, char *path, int num_of_monster, MONSTER
                 imageRect=(SDL_Rect){0, 0, w, h};
                 drawRect=(SDL_Rect){SCREEN_WIDTH/2+pos, SCREEN_HEIGHT/2-h/2, w, h};
                 SDL_RenderCopy(renderer, monster_image, &imageRect, &drawRect);
+
+                monster[i].monster_image = monster_image;
+                monster[i].imageRect = imageRect;
+                monster[i].drawRect = drawRect;
             }
             pos = pos + w;
         }
@@ -968,7 +977,7 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
     int attack = triangle_y1;
     int defense = triangle_y1 + 21;
     int item = triangle_y1 + 42;
-    
+
     char mes_buf[1000] = {0};
     char monster_buf[10] = {0};
 
@@ -1187,14 +1196,25 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
                     state = ON;
                     message_window_status();
 
-                    convert_int_to_full_width_char(monster_damage, damage_hull_width);
-                    sprintf(mes_buf,"%sの　こうげき！  %sに　%sの　ダメージ！！", 
-                                   player.status.name, monster_object[order[enemy_pos]].status.name, damage_hull_width);
-
                     monster_object[order[enemy_pos]].status.hp = monster_object[order[enemy_pos]].status.hp - monster_damage;
+
+                    sprintf(mes_buf,"%sの　こうげき！", player.status.name);
 
                     message = mes_buf;
                     window_update(renderer, font, e);
+
+                    damage_flush(renderer,
+                                 &monster_object[order[enemy_pos]].monster_image,
+                                 monster_object[order[enemy_pos]].imageRect,
+                                 monster_object[order[enemy_pos]].drawRect);
+
+                    convert_int_to_full_width_char(monster_damage, damage_hull_width);
+
+                    strcpy(mes_buf, "\0");
+                    sprintf(mes_buf,"  %sに　%sの　ダメージ！！", monster_object[order[enemy_pos]].status.name, damage_hull_width);
+
+                    message = mes_buf;
+                    message_engine(renderer, font, e);
 
                     if (monster_object[order[enemy_pos]].status.hp <= 0) {
                         int k;
@@ -1204,6 +1224,11 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
                                 monster_sort[k].status.hp = 0;
                             }
                         }
+
+                        strcpy(mes_buf, "\0");
+                        sprintf(mes_buf,"%sの　こうげき！  %sに　%sの　ダメージ！！",
+                                      player.status.name, monster_object[order[enemy_pos]].status.name, damage_hull_width);
+
 
                         knock_out_monster(renderer, e, path, num_of_monster, monster_object, mes_buf);
                         SDL_Delay(400);
@@ -1224,7 +1249,7 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
                         message_window_status();
 
                         convert_int_to_full_width_char(player_damage, damage_hull_width);
-                        sprintf(mes_buf,"%sの　こうげき！  %sに　%sの　ダメージ！！", 
+                        sprintf(mes_buf,"%sの　こうげき！  %sに　%sの　ダメージ！！",
                                         monster_sort[i].status.name, player.status.name,  damage_hull_width);
 
                         player.status.hp = player.status.hp - player_damage;
@@ -1244,16 +1269,31 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
                 state = ON;
                 message_window_status();
 
-                convert_int_to_full_width_char(monster_damage, damage_hull_width);
-                sprintf(mes_buf,"%sの　こうげき！  %sに　%sの　ダメージ！！", 
-                              player.status.name, monster_object[order[enemy_pos]].status.name, damage_hull_width);
-
                 monster_object[order[enemy_pos]].status.hp = monster_object[order[enemy_pos]].status.hp - monster_damage;
+
+                sprintf(mes_buf,"%sの　こうげき！", player.status.name);
 
                 message = mes_buf;
                 window_update(renderer, font, e);
 
+                damage_flush(renderer,
+                             &monster_object[order[enemy_pos]].monster_image,
+                             monster_object[order[enemy_pos]].imageRect,
+                             monster_object[order[enemy_pos]].drawRect);
+
+                convert_int_to_full_width_char(monster_damage, damage_hull_width);
+
+                strcpy(mes_buf, "\0");
+                sprintf(mes_buf,"  %sに　%sの　ダメージ！！", monster_object[order[enemy_pos]].status.name, damage_hull_width);
+
+                message = mes_buf;
+                message_engine(renderer, font, e);
+
+
                 if (monster_object[order[enemy_pos]].status.hp <= 0) {
+                    strcpy(mes_buf, "\0");
+                    sprintf(mes_buf,"%sの　こうげき！  %sに　%sの　ダメージ！！",
+                                  player.status.name, monster_object[order[enemy_pos]].status.name, damage_hull_width);
 
                     knock_out_monster(renderer, e, path, num_of_monster, monster_object, mes_buf);
                     SDL_Delay(400);
@@ -1408,7 +1448,7 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
                     battle_status = BATTLE_ACTION;
                 } else if (battle_status == BATTLE_ACTION) {
                     battle_status = NORMAL;
-                } else {                    
+                } else {
                     break;
                 }
             } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_UP){
@@ -1452,17 +1492,17 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
             } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SPACE){
                 if (battle_status == NORMAL) {
                     if (triangle_y1 == escape) {
-                        battle_status = ESCAPE;                    
+                        battle_status = ESCAPE;
                     } else if (triangle_y1 == battle) {
-                        battle_status = BATTLE_ACTION;                    
+                        battle_status = BATTLE_ACTION;
                     }
            } else if (battle_status == BATTLE_ACTION) {
                     if (triangle_y1 == battle_select) {
-                        battle_status = BATTLE_SELECT;                    
+                        battle_status = BATTLE_SELECT;
                     } else if (triangle_y1 == defense) {
-                        battle_status = DEFENSE;                    
+                        battle_status = DEFENSE;
                     } else if (triangle_y1 == item) {
-                        battle_status = ITEM;                    
+                        battle_status = ITEM;
                     }
           } else if (battle_status == BATTLE_SELECT) {
                     battle_status = ATTACK;
