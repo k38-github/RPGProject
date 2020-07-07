@@ -5,7 +5,6 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
-#include <SDL2/SDL_mixer.h>
 
 typedef enum {DOWN, LEFT, RIGHT, UP} DIRECTION;
 typedef enum {FALSE, TRUE} MOVING;
@@ -48,10 +47,10 @@ typedef struct {
     DIRECTION direction;
     MOVING moving;
     CHARACTER_STATUS status;
-} CARACTER;
+} CHARACTER;
 
 typedef struct {
-    CARACTER npc;
+    CHARACTER npc;
     char message[1024];
     SDL_Texture *npc_image;
     MOVING npc_move;
@@ -141,9 +140,6 @@ int draw_monster(SDL_Renderer *, char *, int, MONSTER *);
 int load_map_image(SDL_Renderer *, SDL_Texture **);
 int load_mapchip(SDL_Renderer *);
 int load_move(SDL_Renderer *, SDL_Texture *);
-int load_se(void);
-int load_bgm(void);
-int sound_se(char *);
 int load_map(char *);
 int draw_map(SDL_Renderer *);
 int load_treasure(SDL_Renderer *);
@@ -186,7 +182,6 @@ int convert_int_to_full_width_char(int, char *);
 int convert_int_to_alphabet(int, char *);
 
 int knock_out_monster(SDL_Renderer *renderer, SDL_Event, char *, int, MONSTER *, char *);
-// int knock_out_monster(SDL_Renderer *, int, int);
 int compare_agility(const void *, const void *);
 int create_battle_status_window(SDL_Renderer *);
 
@@ -209,7 +204,6 @@ SDL_Texture *player_image = NULL;
 TTF_Font *font = NULL;
 TTF_Font *title_font = NULL;
 TTF_Font *main_title_font = NULL;
-Mix_Music *music = NULL;
 
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
@@ -232,7 +226,7 @@ int number_of_npc_image = 0;
 int number_of_monster = 0;
 
 
-CARACTER player = {1, 1, 32, 32, 0, 0, 0, 0, DOWN, FALSE};
+CHARACTER player = {1, 1, 32, 32, 0, 0, 0, 0, DOWN, FALSE};
 NPC npc[256] = {0};
 MONSTER monster[256] = {0};
 

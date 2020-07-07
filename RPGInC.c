@@ -4,9 +4,9 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
-#include <SDL2/SDL_mixer.h>
 #include "RPGInC.h"
 #include "effect/effect.h"
+#include "sounds/sounds.h"
 
 int main (int argc, char *argv[]) {
 
@@ -36,16 +36,8 @@ int main (int argc, char *argv[]) {
     }
     //
 
-    // Initialize Mixer
-    if (SDL_Init(SDL_INIT_AUDIO) < 0) {
-        printf( "Mixer could not initialize! Mixer_Error: %s\n", Mix_GetError());
-        return 1;
-    }
-    if( Mix_OpenAudio( 22050, MIX_DEFAULT_FORMAT, 2, 4096 ) == -1 ) {
-        printf( "Mix_OpenAudio could not initialize! Mixer_Error: %s\n", Mix_GetError());
-        return 1;
-    }
-    //
+    // Initialze Mixer
+    initialize_sounds();
 
     // Initialize Data
     int i, j;
@@ -71,16 +63,6 @@ int main (int argc, char *argv[]) {
         door[i].status = 9;
     }
 
-    music = Mix_LoadMUS("music/bgm/opening.ogg");
-    if (music == NULL) {
-        return 1;
-    }
-    if (Mix_PlayMusic(music, -1) == -1) {
-        return 1;
-    }
-
-    Mix_VolumeMusic(10);
-    Mix_PlayingMusic();
     //
 
     // title window
@@ -151,7 +133,7 @@ int main (int argc, char *argv[]) {
                 if (start_flg == ON){
                     start_flg = OFF;
                     sprintf(MAP_EVENT_NAME, "%s", "field");
-                    load_bgm();
+                    load_bgm(MAP_EVENT_NAME);
                     break;
                 }
             }
@@ -219,9 +201,7 @@ int main (int argc, char *argv[]) {
     SDL_DestroyTexture(player_image);
     SDL_Quit();
 
-    // quit SDL_mixer
-    Mix_FreeMusic(music);
-    Mix_CloseAudio();
+    quit_sounds();
 
     return 0;
 
@@ -793,7 +773,7 @@ int load_move(SDL_Renderer *renderer, SDL_Texture *player_image) {
                 if (player.map_x == event_point_x && player.map_y == event_point_y) {
                     if (player.direction == direction_of_penetration) {
 
-                        load_se();
+                        load_se(player.map_x, player.map_y, MAP_EVENT_NAME);
 
                         sprintf(MAP_EVENT_NAME, "%s", new_map_name);
 
@@ -802,7 +782,7 @@ int load_move(SDL_Renderer *renderer, SDL_Texture *player_image) {
                         load_treasure(renderer);
                         load_door(renderer);
 
-                        load_bgm();
+                        load_bgm(MAP_EVENT_NAME);
 
                         player.map_x = new_x;
                         player.map_y = new_y;
@@ -988,7 +968,7 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
     sprintf(path, "image/monster/%s.bmp", monster.status.name);
     sprintf(map_event_name_save, "%s", MAP_EVENT_NAME);
     sprintf(MAP_EVENT_NAME, "%s", "battle");
-    load_bgm();
+    load_bgm(MAP_EVENT_NAME);
 
     make_window(renderer, battle_back_window);
     make_window(renderer, message_window);
@@ -1233,7 +1213,6 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
                         knock_out_monster(renderer, e, path, num_of_monster, monster_object, mes_buf);
                         SDL_Delay(400);
 
-                        printf("taoshita: %s\n", monster_object[order[enemy_pos]].status.name);
                         strcpy(mes_buf, "\0");
                         sprintf(mes_buf, "    %sを　たおした！", monster_object[order[enemy_pos]].status.name);
                         battle_enemy_window.rectangle_h = battle_enemy_window.rectangle_h - 21;
@@ -1411,6 +1390,10 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
             printf("battle_end\n");
             char gold_hull_width[30] = {0};
             char experience_hull_width[30] = {0};
+
+            pause_sounds();
+            sound_se("battle_end.ogg");
+
             strcpy(mes_buf, "\0");
 
             state = ON;
@@ -1516,7 +1499,9 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
     battle_enemy_window.rectangle_h = rectangle_h;
     sprintf(MAP_EVENT_NAME, "%s", map_event_name_save);
     free(monster_object);
-    load_bgm();
+
+    resume_sounds();
+    load_bgm(MAP_EVENT_NAME);
 
     return 0;
 }
@@ -1530,7 +1515,6 @@ int compare_agility(const void * n1, const void * n2) {
         return 0;
     }
 }
-    
 
 int fade_out(SDL_Renderer *renderer, SDL_Texture *player_image) {
 
@@ -1576,140 +1560,7 @@ int fade_out(SDL_Renderer *renderer, SDL_Texture *player_image) {
 
 }
 
-int load_se(void) {
-    char event_path[256] = {0};
 
-    sprintf(event_path, "data/%s.evt", MAP_EVENT_NAME);
-
-    FILE *fp;
-    char buf[256] = {0};
-    char event[256] = {0};
-    int event_point_x;
-    int event_point_y;
-    char *se_name;
-    char se_path[256] = {0};
-
-    int i = 0;
-
-    Mix_Chunk *wave = NULL;
-
-    fp = fopen(event_path, "r");
-    if (fp == NULL) {
-        printf("file open error. %d\n", __LINE__);
-        return 1;
-    }
-
-    if ((se_name = malloc(sizeof(char) * 256)) == NULL) {
-        printf("file open error. %d\n", __LINE__);
-        return 1;
-    }
-
-    for(i = 0;fgets(buf, sizeof(buf), fp) != NULL;i++) {
-
-        if (strncmp(buf, "#", 1) != 0){
-            if (strncmp(buf, "SE", 2) == 0) {
-                sscanf(buf,
-                   "%[^,],%d,%d,%[^,]",
-                       event, &event_point_x, &event_point_y, se_name);
-
-                if (player.map_x == event_point_x && player.map_y == event_point_y) {
-                    sprintf(se_path, "music/se/%s", se_name);
-
-                    wave = Mix_LoadWAV(se_path);
-                    if (wave == NULL) {
-                        return 1;
-                    }
-
-                    Mix_VolumeChunk(wave, 10);
-                    if ( Mix_PlayChannel(-1, wave, 0) == -1 ) {
-                        return 1;
-                    }
-
-                    break;
-                }
-            }
-        }
-    }
-
-    fclose(fp);
-    free(se_name);
-
-    return 0;
-}
-
-int sound_se(char *se_name) {
-
-    Mix_Chunk *wave = NULL;
-    char se_path[256] = {0};
-
-    sprintf(se_path, "music/se/%s", se_name);
-
-    wave = Mix_LoadWAV(se_path);
-    if (wave == NULL) {
-        return 1;
-    }
-
-    Mix_VolumeChunk(wave, 10);
-    if ( Mix_PlayChannel(-1, wave, 0) == -1 ) {
-        return 1;
-    }
-
-    return 0;
-}
-
-int load_bgm(void) {
-    char event_path[256] = {0};
-
-    sprintf(event_path, "data/%s.evt", MAP_EVENT_NAME);
-
-    FILE *fp;
-    char buf[256] = {0};
-    char event[256] = {0};
-    char *bgm_name;
-    char bgm_path[256] = {0};
-
-    int i = 0;
-
-    fp = fopen(event_path, "r");
-    if (fp == NULL) {
-        printf("file open error. %d\n", __LINE__);
-        return 1;
-    }
-
-    if ((bgm_name = malloc(sizeof(char) * 256)) == NULL) {
-        printf("file open error. %d\n", __LINE__);
-        return 1;
-    }
-
-
-    for(i = 0;fgets(buf, sizeof(buf), fp) != NULL;i++) {
-
-        if (strncmp(buf, "#", 1) != 0){
-            if (strncmp(buf, "BGM", 3) == 0) {
-                sscanf(buf,
-                   "%[^,],%[^,]",
-                       event, bgm_name);
-
-                sprintf(bgm_path, "music/bgm/%s", bgm_name);
-
-                music = Mix_LoadMUS(bgm_path);
-                if (music == NULL) {
-                    return 1;
-                }
-                if (Mix_PlayMusic(music, -1) == -1) {
-                    return 1;
-                }
-
-                break;
-            }
-        }
-    }
-
-    fclose(fp);
-    free(bgm_name);
-
-    return 0;
-}
 
 int load_treasure(SDL_Renderer *renderer) {
     char event_path[256] = {0};
