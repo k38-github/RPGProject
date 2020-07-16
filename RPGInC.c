@@ -962,6 +962,9 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
     char monster_buf[10] = {0};
 
     BATTLE_STATUS battle_status = NORMAL;
+    SDL_Texture *blow_image = NULL;
+
+    load_image(renderer, &blow_image, "image/effects/blow.bmp");
 
     sprintf(monster_name, "%s", monster.status.name);
     printf("monster name:%s\n", monster_name);
@@ -1183,10 +1186,19 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
                     message = mes_buf;
                     window_update(renderer, font, e);
 
+                    blow_effects(renderer, &blow_image,
+                                 monster_object[order[enemy_pos]].imageRect.w,
+                                 monster_object[order[enemy_pos]].imageRect.h,
+                                 monster_object[order[enemy_pos]].drawRect.x,
+                                 monster_object[order[enemy_pos]].drawRect.y);
+
+                    draw_monster(renderer, path, num_of_monster, monster_object);
+
                     damage_flush(renderer,
                                  &monster_object[order[enemy_pos]].monster_image,
                                  monster_object[order[enemy_pos]].imageRect,
                                  monster_object[order[enemy_pos]].drawRect);
+
 
                     convert_int_to_full_width_char(monster_damage, damage_hull_width);
 
@@ -1254,6 +1266,13 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
 
                 message = mes_buf;
                 window_update(renderer, font, e);
+                blow_effects(renderer, &blow_image,
+                             monster_object[order[enemy_pos]].imageRect.w,
+                             monster_object[order[enemy_pos]].imageRect.h,
+                             monster_object[order[enemy_pos]].drawRect.x,
+                             monster_object[order[enemy_pos]].drawRect.y);
+
+                draw_monster(renderer, path, num_of_monster, monster_object);
 
                 damage_flush(renderer,
                              &monster_object[order[enemy_pos]].monster_image,
@@ -1499,6 +1518,7 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
     battle_enemy_window.rectangle_h = rectangle_h;
     sprintf(MAP_EVENT_NAME, "%s", map_event_name_save);
     free(monster_object);
+    SDL_DestroyTexture(blow_image);
 
     resume_sounds();
     load_bgm(MAP_EVENT_NAME);
@@ -1765,14 +1785,17 @@ int is_movable(int x, int y) {
     }
 
     if ( x < 0 || x > COL - 1 || y  < 0 || y > ROW - 1) {
+        sound_se("collisionOfWall.ogg");
         return 2;
     }
 
     if (mapchip[map_array[y*COL+x]].movable == 1) {
+        sound_se("collisionOfWall.ogg");
         return 2;
     }
 
     if (player.map_x == x && player.map_y == y) {
+        sound_se("collisionOfWall.ogg");
         return 1;
     }
 
