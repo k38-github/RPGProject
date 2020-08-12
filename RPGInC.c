@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <malloc.h>
 #include <stdlib.h>
 #include <time.h>
 #include <SDL2/SDL.h>
@@ -7,6 +8,71 @@
 #include "RPGInC.h"
 #include "effect/effect.h"
 #include "sounds/sounds.h"
+#include "load/load.h"
+
+const int SCREEN_WIDTH = 640;
+const int SCREEN_HEIGHT = 480;
+const int IMAGE_WIDTH = 16;
+const int IMAGE_HEIGHT = 16;
+const int MAGNIFICATION = 2;
+const int GRID_SIZE = 32;
+const int FONT_SIZE = 16;
+
+int GOLD = 0;
+
+int ROW = 15;
+int COL = 20;
+int OUT_OF_MAP = 0;
+
+MAPCHIP mapchip[256] = {0};
+char MAP_EVENT_NAME[256] = "field";
+int map_array[65536] = {0};
+int number_of_map_image = 0;
+
+NPC npc[256] = {0};
+int number_of_npc_image = 0;
+
+SDL_Window *window = NULL;
+SDL_Renderer *renderer = NULL;
+SDL_Texture *player_image = NULL;
+TTF_Font *font = NULL;
+TTF_Font *title_font = NULL;
+TTF_Font *main_title_font = NULL;
+
+
+int animecycle = 24;
+int speed = 2;
+int frame = 0;
+int number_of_monster = 0;
+
+CHARACTER player = {1, 1, 32, 32, 0, 0, 0, 0, DOWN, FALSE};
+MONSTER monster[256] = {0};
+
+TREASURE_FRAME treasure[256] = {0};
+DOOR door[256] = {0};
+
+WINDOW message_window = {140, 334, 360, 140, 255, OUT_VISIBLE};
+WINDOW debug_window = {5, 5, 100, 50, 255, OUT_VISIBLE};
+WINDOW command_window = {16, 16, 216, 160, 255, OUT_VISIBLE};
+WINDOW status_window = {32, 32, 170, 135, 255, OUT_VISIBLE};
+WINDOW player_status_window = {500, 320, 120, 140, 255, OUT_VISIBLE};
+WINDOW hp_and_mp_window = {48, 48, 170, 220, 255, OUT_VISIBLE};
+WINDOW gold_window = {480, 32, 140, 30, 255, OUT_VISIBLE};
+
+WINDOW battle_back_window = {-10, 100, 660, 238, 255, OUT_VISIBLE};
+WINDOW battle_status_window = {64, 20, 120, 140, 255, OUT_VISIBLE};
+WINDOW battle_select_window = {64, 314, 140, 60, 255, OUT_VISIBLE};
+WINDOW battle_action_window = {64, 290, 140, 105, 255, OUT_VISIBLE};
+WINDOW battle_enemy_window = {204, 314, 380, 40, 255, OUT_VISIBLE};
+
+char *message = SEARCH_MESSAGE;
+
+STATE state = OFF;
+STATE debug_state = OFF;
+STATE flash_triangle_status = ON;
+COMMAND_STATUS command_status = TALK;
+STATUS_STATUS status_status = HP_AND_MP;
+
 
 int main (int argc, char *argv[]) {
 
@@ -40,10 +106,9 @@ int main (int argc, char *argv[]) {
     initialize_sounds();
 
     // Initialize Data
-    int i, j;
 
-    load_mapchip(renderer);
-    load_map("data/field.map");
+    load_mapchip(renderer, mapchip, number_of_map_image);
+    load_map("data/field.map", map_array, &COL, &ROW, &OUT_OF_MAP);
 
     load_image(renderer, &player_image, "image/charachip/chiharu.bmp");
     set_player_status();
@@ -51,6 +116,7 @@ int main (int argc, char *argv[]) {
     load_npc(renderer);
     load_monster(renderer);
 
+    int i, j;
     for (i = 0;i < sizeof(treasure)/sizeof(treasure[0]);i++) {
         strcpy(treasure[i].map, "empty");
 
@@ -205,27 +271,6 @@ int main (int argc, char *argv[]) {
 
     return 0;
 
-}
-
-int load_image(SDL_Renderer *renderer, SDL_Texture **image_texture, char *filename) {
-
-    SDL_Surface *image = NULL;
-
-    // 画像の読み込み
-    image = IMG_Load(filename);
-    if(!image) {
-        printf("IMG_Load: %s\n", IMG_GetError());
-        return 1;
-    }
-
-    // 透過色の設定
-    SDL_SetColorKey(image, SDL_TRUE, SDL_MapRGB(image->format, 255, 0, 255));
-
-    *image_texture = SDL_CreateTextureFromSurface(renderer, image);
-
-    SDL_FreeSurface(image);
-
-    return 0;
 }
 
 int player_animation(SDL_Renderer *renderer, SDL_Texture *player_image) {
@@ -778,7 +823,7 @@ int load_move(SDL_Renderer *renderer, SDL_Texture *player_image) {
                         sprintf(MAP_EVENT_NAME, "%s", new_map_name);
 
                         sprintf(map_path, "data/%s.map", new_map_name);
-                        load_map(map_path);
+                        load_map(map_path, map_array, &COL, &ROW, &OUT_OF_MAP);
                         load_treasure(renderer);
                         load_door(renderer);
 
@@ -962,9 +1007,6 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
     char monster_buf[10] = {0};
 
     BATTLE_STATUS battle_status = NORMAL;
-    SDL_Texture *blow_image = NULL;
-
-    load_image(renderer, &blow_image, "image/effects/blow.bmp");
 
     sprintf(monster_name, "%s", monster.status.name);
     printf("monster name:%s\n", monster_name);
@@ -1186,7 +1228,7 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
                     message = mes_buf;
                     window_update(renderer, font, e);
 
-                    blow_effects(renderer, &blow_image,
+                    blow_effects(renderer,
                                  monster_object[order[enemy_pos]].imageRect.w,
                                  monster_object[order[enemy_pos]].imageRect.h,
                                  monster_object[order[enemy_pos]].drawRect.x,
@@ -1266,7 +1308,7 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
 
                 message = mes_buf;
                 window_update(renderer, font, e);
-                blow_effects(renderer, &blow_image,
+                blow_effects(renderer,
                              monster_object[order[enemy_pos]].imageRect.w,
                              monster_object[order[enemy_pos]].imageRect.h,
                              monster_object[order[enemy_pos]].drawRect.x,
@@ -1315,10 +1357,10 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
             }
 
             if (battle_status == ATTACK) {
-                flash_triangle_status = ON;
                 battle_status = BATTLE_END;
             }
 
+            flash_triangle_status = ON;
 
             triangle_x1 = 74;
             triangle_y1 = 324;
@@ -1518,7 +1560,6 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
     battle_enemy_window.rectangle_h = rectangle_h;
     sprintf(MAP_EVENT_NAME, "%s", map_event_name_save);
     free(monster_object);
-    SDL_DestroyTexture(blow_image);
 
     resume_sounds();
     load_bgm(MAP_EVENT_NAME);
@@ -1697,67 +1738,6 @@ int load_door(SDL_Renderer *renderer) {
     fclose(fp);
 
     return 0;
-}
-
-int load_map(char *map_name) {
-    FILE *fp;
-    int i = 0;
-    if ((fp = fopen(map_name, "rb")) == NULL) {
-        return 1;
-    }
-
-    fread(&COL, sizeof(int), 1, fp);
-    fread(&ROW, sizeof(int), 1, fp);
-    fread(&OUT_OF_MAP, sizeof(int), 1, fp);
-
-    map_array = realloc(map_array, sizeof(int) * COL * ROW);
-
-    while(!feof(fp)) {
-        fread(&map_array[i++], sizeof(int), 1, fp);
-    }
-
-    fclose(fp);
-
-    return 0;
-}
-
-int load_mapchip(SDL_Renderer *renderer) {
-
-    FILE *fp;
-    int x, y, z;
-    char n[256] = {0};
-    char path[280] = {0};
-    char buf[256] = {0};
-    int i = 0;
-
-    fp = fopen("data/mapchip.dat", "r");
-    if (fp == NULL) {
-        printf("file open error. %d\n", __LINE__);
-        return 1;
-    }
-
-    for(i = 0;fgets(buf, sizeof(buf), fp) != NULL;i++){
-        if (strncmp(buf, "#", 1) != 0){
-            sscanf(buf, "%d,%[^,],%d,%d", &x, n, &y, &z);
-            mapchip[i].mapchip_id = x;
-            strcpy(mapchip[i].mapchip_name, n);
-            mapchip[i].movable = y;
-            mapchip[i].change_locate = z;
-
-            sprintf(path, "image/mapchip/%s.bmp", mapchip[i].mapchip_name);
-            load_image(renderer, &mapchip[i].map_image, path);
-        } else {
-            i--;
-        }
-
-    }
-
-    number_of_map_image = i - 1;
-
-    fclose(fp);
-
-    return 0;
-
 }
 
 int is_movable(int x, int y) {

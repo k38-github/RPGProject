@@ -6,7 +6,7 @@
 #include <SDL2/SDL_image.h>
 
 int damage_flush(SDL_Renderer *, SDL_Texture **, SDL_Rect, SDL_Rect);
-int blow_effects(SDL_Renderer *, SDL_Texture **, int, int, int, int);
+int blow_effects(SDL_Renderer *, int, int, int, int);
 
 #endif
 

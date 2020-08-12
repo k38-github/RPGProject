@@ -84,14 +84,6 @@ typedef struct {
 } MONSTER;
 
 typedef struct {
-    int mapchip_id;
-    char mapchip_name[256];
-    int movable;
-    int change_locate;
-    SDL_Texture *map_image;
-} MAPCHIP;
-
-typedef struct {
     int rectangle_x;
     int rectangle_y;
     int rectangle_w;
@@ -119,7 +111,6 @@ typedef struct {
 } DOOR;
 
 int clac_offset(int, int, int *, int *);
-int load_image(SDL_Renderer *, SDL_Texture **, char *);
 int player_animation(SDL_Renderer *, SDL_Texture *);
 int player_update(SDL_Renderer *, SDL_Event, SDL_Texture *);
 int player_move(SDL_Event);
@@ -138,9 +129,7 @@ int battle_encount(SDL_Renderer *, SDL_Event);
 int draw_monster(SDL_Renderer *, char *, int, MONSTER *);
 
 int load_map_image(SDL_Renderer *, SDL_Texture **);
-int load_mapchip(SDL_Renderer *);
 int load_move(SDL_Renderer *, SDL_Texture *);
-int load_map(char *);
 int draw_map(SDL_Renderer *);
 int load_treasure(SDL_Renderer *);
 int draw_treasure(SDL_Renderer *);
@@ -185,7 +174,6 @@ int knock_out_monster(SDL_Renderer *renderer, SDL_Event, char *, int, MONSTER *,
 int compare_agility(const void *, const void *);
 int create_battle_status_window(SDL_Renderer *);
 
-
 /*** message list ***/
 #define TALK_MESSAGE "そっちには　だれも　いないよ。"
 #define SEARCH_MESSAGE "あしもとを　しらべたけど　なにもないよ。"
@@ -198,65 +186,5 @@ int create_battle_status_window(SDL_Renderer *);
 
 #define FONT_PATH "font/PixelMplus12-Regular.ttf"
 
-SDL_Window *window = NULL;
-SDL_Renderer *renderer = NULL;
-SDL_Texture *player_image = NULL;
-TTF_Font *font = NULL;
-TTF_Font *title_font = NULL;
-TTF_Font *main_title_font = NULL;
-
-const int SCREEN_WIDTH = 640;
-const int SCREEN_HEIGHT = 480;
-const int IMAGE_WIDTH = 16;
-const int IMAGE_HEIGHT = 16;
-const int MAGNIFICATION = 2;
-const int GRID_SIZE = 32;
-const int FONT_SIZE = 16;
-int ROW = 15;
-int COL = 20;
-int OUT_OF_MAP = 0;
-char MAP_EVENT_NAME[256] = "field";
-int GOLD = 0;
-
-int animecycle = 24;
-int speed = 2;
-int frame = 0;
-int number_of_map_image = 0;
-int number_of_npc_image = 0;
-int number_of_monster = 0;
-
-
-CHARACTER player = {1, 1, 32, 32, 0, 0, 0, 0, DOWN, FALSE};
-NPC npc[256] = {0};
-MONSTER monster[256] = {0};
-
-TREASURE_FRAME treasure[256] = {0};
-DOOR door[256] = {0};
-
-MAPCHIP mapchip[256] = {0};
-
-int *map_array;
-
-WINDOW message_window = {140, 334, 360, 140, 255, OUT_VISIBLE};
-WINDOW debug_window = {5, 5, 100, 50, 255, OUT_VISIBLE};
-WINDOW command_window = {16, 16, 216, 160, 255, OUT_VISIBLE};
-WINDOW status_window = {32, 32, 170, 135, 255, OUT_VISIBLE};
-WINDOW player_status_window = {500, 320, 120, 140, 255, OUT_VISIBLE};
-WINDOW hp_and_mp_window = {48, 48, 170, 220, 255, OUT_VISIBLE};
-WINDOW gold_window = {480, 32, 140, 30, 255, OUT_VISIBLE};
-
-WINDOW battle_back_window = {-10, 100, 660, 238, 255, OUT_VISIBLE};
-WINDOW battle_status_window = {64, 20, 120, 140, 255, OUT_VISIBLE};
-WINDOW battle_select_window = {64, 314, 140, 60, 255, OUT_VISIBLE};
-WINDOW battle_action_window = {64, 290, 140, 105, 255, OUT_VISIBLE};
-WINDOW battle_enemy_window = {204, 314, 380, 40, 255, OUT_VISIBLE};
-
-char *message = SEARCH_MESSAGE;
-
-STATE state = OFF;
-STATE debug_state = OFF;
-STATE flash_triangle_status = ON;
-COMMAND_STATUS command_status = TALK;
-STATUS_STATUS status_status = HP_AND_MP;
 
 #endif
