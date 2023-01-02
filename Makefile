@@ -1,28 +1,35 @@
-all: RPGInC
+PROGNAME := RPGInC
+MAINSRC := src/main/main/c/main.c
+FUNCSRCDIR := src/main/function
+OUTDIR := build/exec
+OUTOBJSDIR := build/objects
 
-RPGInC: effect.o sounds.o load.o
-	gcc -g -o RPGInC RPGInC.c RPGInC.h effect.o sounds.o load.o `sdl2-config --cflags --libs` -lSDL2_image -lSDL2_ttf -lSDL2_mixer
+TARGET := map
+SRCS := $(wildcard $(FUNCSRCDIR)/*/c/*.c)
+OBJFILE := $(notdir $(patsubst %.c,%.o,$(SRCS)))
+OBJS := $(addprefix $(OUTOBJSDIR)/,$(OBJFILE))
 
-effect.o:
-	gcc -g -c ./effect/effect.c ./effect/effect.h
+CC = gcc
+SDLLFGS = `sdl2-config --cflags --libs` -lSDL2_image -lSDL2_ttf -lSDL2_mixer
 
-sounds.o:
-	gcc -g -c ./sounds/sounds.c ./sounds/sounds.h
+.PHONY: all build run clean
+all: $(TARGET)
 
-load.o:
-	gcc -g -c ./load/load.c ./load/load.h
+$(TARGET): $(OBJFILE)
+	$(CC) -g -o $(OUTDIR)/$(PROGNAME) $(MAINSRC) $(OBJS) $(SDLLFGS)
+
+$(OBJFILE): $(SRCS)
+
+$(SRCS): build
+	$(CC) -c $@ -o $(OUTOBJSDIR)/$(notdir $*).o
+
+build:
+	mkdir -p ./build/exec
+	mkdir -p ./build/objects
 
 run:
-	./RPGInC
-
-map:
-	gcc -g -o MAPCreater MAPCreater.c `sdl2-config --cflags --libs` -lSDL2_image -lSDL2_ttf
-
-runmap:
-	./MAPCreater
+	./build/exec/RPGInC
 
 clean:
-	rm -f RPGInC
-	rm -f effect.o
-	rm -f sounds.o
-	rm -f load.o
+	rm -f ./build/exec/RPGInC
+	rm -rf ./build

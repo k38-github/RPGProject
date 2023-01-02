@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
-#include "../sounds/sounds.h"
-#include "../load/load.h"
+#include "../../sounds/headers/sounds.h"
+#include "../../load/headers/load.h"
 
 
 int damage_flush(SDL_Renderer *renderer, SDL_Texture **image_texture,
@@ -38,7 +38,7 @@ int blow_effects(SDL_Renderer *renderer, int image_w, int image_h, int draw_x, i
 
     SDL_Texture *blow_image = NULL;
 
-    load_image(renderer, &blow_image, "image/effects/blow.bmp");
+    load_image(renderer, &blow_image, "src/resources/image/effects/blow.bmp");
 
     SDL_Rect imageRect = (SDL_Rect){0, 0, image_w, image_h};
     SDL_Rect drawRect = (SDL_Rect){draw_x-image_w/3, draw_y-image_h/3, image_w, image_h};

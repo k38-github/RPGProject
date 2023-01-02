@@ -5,10 +5,8 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
-#include "RPGInC.h"
-#include "effect/effect.h"
-#include "sounds/sounds.h"
-#include "load/load.h"
+#include <SDL2/SDL_mixer.h>
+#include "../headers/main.h"
 
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
@@ -108,9 +106,9 @@ int main (int argc, char *argv[]) {
     // Initialize Data
 
     load_mapchip(renderer, mapchip, number_of_map_image);
-    load_map("data/field.map", map_array, &COL, &ROW, &OUT_OF_MAP);
+    load_map("src/resources/map/field.map", map_array, &COL, &ROW, &OUT_OF_MAP);
 
-    load_image(renderer, &player_image, "image/charachip/chiharu.bmp");
+    load_image(renderer, &player_image, "src/resources/image/charachip/chiharu.bmp");
     set_player_status();
 
     load_npc(renderer);
@@ -319,6 +317,7 @@ int player_update(SDL_Renderer *renderer, SDL_Event e, SDL_Texture *player_image
         player_move(e);
     }
 
+    return 0;
 }
 
 int player_move(SDL_Event e) {
@@ -376,7 +375,7 @@ int set_player_status() {
 int load_monster(SDL_Renderer *renderer) {
     char event_path[256] = {0};
 
-    sprintf(event_path, "data/%s.evt", MAP_EVENT_NAME);
+    sprintf(event_path, "src/resources/evt/%s.evt", MAP_EVENT_NAME);
 
     FILE *fp;
     char event[256] = {0};
@@ -443,7 +442,7 @@ int load_monster(SDL_Renderer *renderer) {
 
 int load_monster_status(char *in_monster_name, int in_monster_id, int element_number) {
 
-    char *event_path =  "data/monster.dat";
+    char *event_path =  "src/resources/dat/monster.dat";
 
     FILE *fp;
     char buf[1024] = {0};
@@ -556,7 +555,7 @@ int load_monster_status(char *in_monster_name, int in_monster_id, int element_nu
 int load_npc(SDL_Renderer *renderer) {
     char event_path[256] = {0};
 
-    sprintf(event_path, "data/%s.evt", MAP_EVENT_NAME);
+    sprintf(event_path, "src/resources/evt/%s.evt", MAP_EVENT_NAME);
 
     FILE *fp;
     char event[256] = {0};
@@ -598,7 +597,7 @@ int load_npc(SDL_Renderer *renderer) {
                    "%[^,],%[^,],%d,%d,%u,%u,%[^,]",
                        event, npc_name, &map_x, &map_y, &direction, &moving, message);
 
-                sprintf(npc_path, "image/charachip/%s.bmp", npc_name);
+                sprintf(npc_path, "src/resources/image/charachip/%s.bmp", npc_name);
                 load_image(renderer, &npc[element_number].npc_image, npc_path);
 
                 npc[element_number].npc.map_x = map_x;
@@ -670,6 +669,8 @@ int npc_update(SDL_Renderer *renderer, int element) {
             }
         }
     }
+
+    return 0;
 }
 
 int npc_move(DIRECTION direction, int element) {
@@ -787,7 +788,7 @@ int draw_door(SDL_Renderer *renderer, SDL_Event e){
 int load_move(SDL_Renderer *renderer, SDL_Texture *player_image) {
     char event_path[256] = {0};
 
-    sprintf(event_path, "data/%s.evt", MAP_EVENT_NAME);
+    sprintf(event_path, "src/resources/evt/%s.evt", MAP_EVENT_NAME);
 
     FILE *fp;
     char event[256] = {0};
@@ -822,7 +823,7 @@ int load_move(SDL_Renderer *renderer, SDL_Texture *player_image) {
 
                         sprintf(MAP_EVENT_NAME, "%s", new_map_name);
 
-                        sprintf(map_path, "data/%s.map", new_map_name);
+                        sprintf(map_path, "src/resources/map/%s.map", new_map_name);
                         load_map(map_path, map_array, &COL, &ROW, &OUT_OF_MAP);
                         load_treasure(renderer);
                         load_door(renderer);
@@ -1010,7 +1011,7 @@ int battle_window(SDL_Renderer *renderer, SDL_Event e, MONSTER monster) {
 
     sprintf(monster_name, "%s", monster.status.name);
     printf("monster name:%s\n", monster_name);
-    sprintf(path, "image/monster/%s.bmp", monster.status.name);
+    sprintf(path, "src/resources/image/monster/%s.bmp", monster.status.name);
     sprintf(map_event_name_save, "%s", MAP_EVENT_NAME);
     sprintf(MAP_EVENT_NAME, "%s", "battle");
     load_bgm(MAP_EVENT_NAME);
@@ -1626,7 +1627,7 @@ int fade_out(SDL_Renderer *renderer, SDL_Texture *player_image) {
 int load_treasure(SDL_Renderer *renderer) {
     char event_path[256] = {0};
 
-    sprintf(event_path, "data/%s.evt", MAP_EVENT_NAME);
+    sprintf(event_path, "src/resources/evt/%s.evt", MAP_EVENT_NAME);
 
     FILE *fp;
     char event[256] = {0};
@@ -1698,7 +1699,7 @@ int load_treasure(SDL_Renderer *renderer) {
 int load_door(SDL_Renderer *renderer) {
     char event_path[256] = {0};
 
-    sprintf(event_path, "data/%s.evt", MAP_EVENT_NAME);
+    sprintf(event_path, "src/resources/evt/%s.evt", MAP_EVENT_NAME);
 
     FILE *fp;
     char event[256] = {0};
