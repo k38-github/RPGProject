@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
-#include "load.h"
+#include "../headers/load.h"
 
 int load_image(SDL_Renderer *renderer, SDL_Texture **image_texture, char *filename) {
 
@@ -35,7 +35,7 @@ int load_mapchip(SDL_Renderer *renderer, MAPCHIP *mapchip, int number_of_map_ima
     char buf[256] = {0};
     int i = 0;
 
-    fp = fopen("data/mapchip.dat", "r");
+    fp = fopen("src/resources/dat/mapchip.dat", "r");
     if (fp == NULL) {
         printf("file open error. %d\n", __LINE__);
         return 1;
@@ -49,7 +49,7 @@ int load_mapchip(SDL_Renderer *renderer, MAPCHIP *mapchip, int number_of_map_ima
             mapchip[i].movable = y;
             mapchip[i].change_locate = z;
 
-            sprintf(path, "image/mapchip/%s.bmp", mapchip[i].mapchip_name);
+            sprintf(path, "src/resources/image/mapchip/%s.bmp", mapchip[i].mapchip_name);
             load_image(renderer, &mapchip[i].map_image, path);
         } else {
             i--;

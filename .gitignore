@@ -1,7 +1,1 @@
-RPGInC
-effect.o
-effect/effect.h.gch
-load.o
-load/load.h.gch
-sounds.o
-sounds/sounds.h.gch
+build/

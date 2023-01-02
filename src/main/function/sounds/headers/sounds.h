@@ -1,5 +1,5 @@
-#ifdef _SOUNDS
-#else
+#ifndef SOUNDS_H
+#define SOUNDS_H
 
 #include <stdio.h>
 #include <SDL2/SDL.h>
