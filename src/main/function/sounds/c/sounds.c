@@ -16,7 +16,7 @@ int initialize_sounds() {
     }
     //
 
-    sounds = Mix_LoadMUS("sounds/bgm/opening.ogg");
+    sounds = Mix_LoadMUS("src/resources/sounds/bgm/opening.ogg");
     if (sounds == NULL) {
         return 1;
     }
@@ -54,7 +54,7 @@ int load_se(int player_map_x, int player_map_y, char *map_event_name) {
 
     char event_path[256] = {0};
 
-    sprintf(event_path, "data/%s.evt", map_event_name);
+    sprintf(event_path, "src/resources/evt/%s.evt", map_event_name);
 
     FILE *fp;
     char buf[256] = {0};
@@ -88,7 +88,7 @@ int load_se(int player_map_x, int player_map_y, char *map_event_name) {
                        event, &event_point_x, &event_point_y, se_name);
 
                 if (player_map_x == event_point_x && player_map_y == event_point_y) {
-                    sprintf(se_path, "sounds/se/%s", se_name);
+                    sprintf(se_path, "src/resources/sounds/se/%s", se_name);
 
                     wave = Mix_LoadWAV(se_path);
                     if (wave == NULL) {
@@ -117,7 +117,7 @@ int sound_se(char *se_name) {
     Mix_Chunk *wave = NULL;
     char se_path[256] = {0};
 
-    sprintf(se_path, "sounds/se/%s", se_name);
+    sprintf(se_path, "src/resources/sounds/se/%s", se_name);
 
     wave = Mix_LoadWAV(se_path);
     if (wave == NULL) {
@@ -135,7 +135,7 @@ int sound_se(char *se_name) {
 int load_bgm(char *map_event_name) {
     char event_path[256] = {0};
 
-    sprintf(event_path, "data/%s.evt", map_event_name);
+    sprintf(event_path, "src/resources/evt/%s.evt", map_event_name);
 
     FILE *fp;
     char buf[256] = {0};
@@ -165,7 +165,7 @@ int load_bgm(char *map_event_name) {
                    "%[^,],%[^,]",
                        event, bgm_name);
 
-                sprintf(bgm_path, "sounds/bgm/%s", bgm_name);
+                sprintf(bgm_path, "src/resources/sounds/bgm/%s", bgm_name);
 
                 sounds = Mix_LoadMUS(bgm_path);
                 if (sounds == NULL) {

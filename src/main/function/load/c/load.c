@@ -5,6 +5,7 @@
 #include <SDL2/SDL_image.h>
 #include "../headers/load.h"
 
+
 int load_image(SDL_Renderer *renderer, SDL_Texture **image_texture, char *filename) {
 
     SDL_Surface *image = NULL;

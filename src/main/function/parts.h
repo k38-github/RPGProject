@@ -153,9 +153,9 @@ extern int number_of_npc_image;
 extern SDL_Window *window;
 extern SDL_Renderer *renderer;
 extern SDL_Texture *player_image;
-extern TTF_Font *font;
-extern TTF_Font *title_font;
-extern TTF_Font *main_title_font;
+//extern TTF_Font *font;
+//extern TTF_Font *title_font;
+//extern TTF_Font *main_title_font;
 
 
 extern int animecycle;
